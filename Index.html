@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MenuLens RealSync</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gun/gun.js"></script>
+</head>
+<body class="bg-gray-100 pb-40">
+
+    <div id="sync-indicator" class="bg-gray-800 text-white text-[10px] py-1 px-4 flex justify-between">
+        <span id="sync-text">📡 正在連接雲端...</span>
+        <button onclick="showShare()" class="underline">分享 QR Code</button>
+    </div>
+
+    <header class="bg-white p-5 shadow-md sticky top-0 z-50 flex justify-between items-center">
+        <div>
+            <h1 class="text-xl font-black text-blue-600">MenuLens</h1>
+            <p class="text-[10px] text-gray-400">多人同步房間模式</p>
+        </div>
+        <select id="currency-selector" onchange="changeCurrency()" class="bg-blue-50 text-blue-700 font-bold p-1 rounded">
+            <option value="TWD" data-rate="0.21">台幣 (TWD)</option>
+            <option value="HKD" data-rate="0.052">港幣 (HKD)</option>
+            <option value="CUSTOM">➕ 手動匯率</option>
+        </select>
+    </header>
+
+    <main id="item-list" class="p-4 space-y-4"></main>
+
+    <div class="fixed bottom-0 left-0 right-0 bg-white p-6 border-t flex justify-between items-center z-40">
+        <div>
+            <p class="text-xs text-gray-400">總計 (JPY)</p>
+            <p class="text-3xl font-black">¥<span id="total-jpy">0</span></p>
+        </div>
+        <div class="bg-blue-600 text-white px-6 py-3 rounded-2xl text-right">
+            <p class="text-[10px] opacity-70" id="target-label">換算金額</p>
+            <p class="text-2xl font-bold font-mono"><span id="symbol">NT$</span><span id="total-target">0.0</span></p>
+        </div>
+    </div>
+
+    <div id="qr-modal" class="hidden fixed inset-0 bg-black/80 z-[60] flex items-center justify-center" onclick="this.classList.add('hidden')">
+        <div class="bg-white p-8 rounded-3xl text-center" onclick="event.stopPropagation()">
+            <div id="qrcode" class="mb-4"></div>
+            <p class="text-sm font-bold">請夥伴掃描加入</p>
+        </div>
+    </div>
+
+    <script>
+        // 初始化 Gun.js (使用公共 Relay 伺服器)
+        const gun = Gun(['https://gun-manhattan.herokuapp.com/gun']);
+        const room = gun.get('menulens-room-unique-id-2026'); // 這是房間 ID，你可以隨意更改
+
+        let state = {
+            rate: 0.21,
+            symbol: 'NT$',
+            items: [
+                { id: 1, name: '特級黑豚拉麵', price: 1450, qty: 1, picked: true },
+                { id: 2, name: '日式煎餃', price: 480, qty: 1, picked: false }
+            ]
+        };
+
+        // 監聽雲端數據更新
+        room.on((data) => {
+            if (data && data.content) {
+                state = JSON.parse(data.content);
+                document.getElementById('sync-text').innerText = "✅ 已同步最新資料";
+                render(false);
+            }
+        });
+
+        function render(isLocalChange = true) {
+            const list = document.getElementById('item-list');
+            list.innerHTML = state.items.map(item => `
+                <div class="bg-white p-4 rounded-xl shadow-sm border-2 ${item.picked ? 'border-blue-500 bg-blue-50' : 'border-transparent'}">
+                    <div class="flex justify-between">
+                        <div onclick="toggle(${item.id})">
+                            <h3 class="font-bold">${item.name}</h3>
+                            <p class="text-blue-600 font-bold">≈ ${state.symbol}${(item.price * state.rate).toFixed(1)}</p>
+                        </div>
+                        <input type="checkbox" ${item.picked ? 'checked' : ''} onchange="toggle(${item.id})" class="w-6 h-6">
+                    </div>
+                    <div class="flex justify-end mt-2 space-x-4 items-center">
+                        <button onclick="updateQty(${item.id}, -1)" class="w-8 h-8 bg-gray-100 rounded">-</button>
+                        <span class="font-bold">${item.qty}</span>
+                        <button onclick="updateQty(${item.id}, 1)" class="w-8 h-8 bg-gray-100 rounded">+</button>
+                    </div>
+                </div>
+            `).join('');
+
+            const total = state.items.filter(i => i.picked).reduce((s, i) => s + (i.price * i.qty), 0);
+            document.getElementById('total-jpy').innerText = total.toLocaleString();
+            document.getElementById('total-target').innerText = (total * state.rate).toFixed(1);
+            document.getElementById('symbol').innerText = state.symbol;
+
+            if (isLocalChange) {
+                document.getElementById('sync-text').innerText = "☁️ 正在同步到雲端...";
+                room.put({ content: JSON.stringify(state) });
+            }
+        }
+
+        function toggle(id) {
+            const item = state.items.find(i => i.id === id);
+            item.picked = !item.picked;
+            render(true);
+        }
+
+        function updateQty(id, delta) {
+            const item = state.items.find(i => i.id === id);
+            item.qty = Math.max(1, item.qty + delta);
+            render(true);
+        }
+
+        function changeCurrency() {
+            const sel = document.getElementById('currency-selector');
+            if(sel.value !== 'CUSTOM') {
+                state.rate = parseFloat(sel.options[sel.selectedIndex].dataset.rate);
+                state.symbol = sel.value === 'TWD' ? 'NT$' : '$';
+                render(true);
+            }
+        }
+
+        function showShare()
