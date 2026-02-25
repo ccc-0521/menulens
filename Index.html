@@ -121,4 +121,13 @@
             }
         }
 
-        function showShare()
+        function showShare() {
+            document.getElementById('qr-modal').classList.remove('hidden');
+            document.getElementById('qrcode').innerHTML = "";
+            new QRCode(document.getElementById("qrcode"), window.location.href);
+        }
+
+        render(false);
+    </script>
+</body>
+</html>
