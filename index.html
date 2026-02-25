@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MenuLens - 全球通用版</title>
+    <title>MenuLens - 密碼保護版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/gun/gun.js"></script>
@@ -11,110 +11,126 @@
     <style>
         .sticky-bottom { position: fixed; bottom: 0; left: 0; right: 0; background: white; box-shadow: 0 -4px 20px rgba(0,0,0,0.1); z-index: 50; }
         #camera-input { position: absolute; width: 1px; height: 1px; opacity: 0; }
-        .font-mono-price { font-family: 'SF Mono', 'Roboto Mono', monospace; }
+        #auth-overlay { position: fixed; inset: 0; background: #0f172a; z-index: 200; display: flex; align-items: center; justify-content: center; padding: 20px; }
     </style>
 </head>
 <body class="bg-slate-50 pb-64">
 
-    <div id="scan-overlay" class="hidden fixed inset-0 bg-slate-900/95 z-[100] flex flex-col items-center justify-center text-white p-10">
+    <div id="auth-overlay">
+        <div class="bg-white p-8 rounded-[2.5rem] w-full max-w-sm shadow-2xl text-center">
+            <div class="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+            </div>
+            <h2 class="text-2xl font-black text-slate-800 mb-2">請輸入存取密碼</h2>
+            <p class="text-slate-400 text-sm mb-6">此網站僅供受邀夥伴使用</p>
+            <input type="password" id="pwd-input" placeholder="Enter Password" 
+                   class="w-full bg-slate-100 border-none rounded-2xl p-4 text-center font-bold text-xl mb-4 outline-none focus:ring-2 focus:ring-blue-500">
+            <button onclick="checkPassword()" class="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold shadow-lg active:scale-95 transition-all">進入房間</button>
+            <p id="error-msg" class="text-red-500 text-xs mt-3 hidden">密碼錯誤，請再試一次</p>
+        </div>
+    </div>
+
+    <div id="scan-overlay" class="hidden fixed inset-0 bg-slate-900/95 z-[100] flex flex-col items-center justify-center text-white">
         <div class="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4"></div>
         <p class="font-bold">AI 掃描辨識中...</p>
     </div>
 
-    <header class="bg-white p-5 sticky top-0 z-40 border-b border-slate-100 shadow-sm">
-        <div class="flex justify-between items-center mb-4">
-            <h1 class="text-2xl font-black text-slate-800 tracking-tighter">Menu<span class="text-blue-600">Lens</span></h1>
-            <button onclick="showShare()" class="p-2 bg-slate-100 rounded-full">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-            </button>
-        </div>
-
-        <div class="bg-blue-600 p-4 rounded-3xl text-white shadow-lg space-y-3">
-            <div class="flex justify-between items-center text-xs font-bold opacity-80 uppercase tracking-widest">
-                <span>旅遊地 (Local)</span>
-                <span>🏠 家鄉 (Home)</span>
+    <div id="app-content" class="invisible">
+        <header class="bg-white p-5 sticky top-0 z-40 border-b border-slate-100 shadow-sm">
+            <div class="flex justify-between items-center mb-4">
+                <h1 class="text-2xl font-black text-slate-800 tracking-tighter">Menu<span class="text-blue-600">Lens</span></h1>
+                <div class="flex space-x-2 text-[10px] font-bold text-slate-400">
+                    <span id="room-id">ROOM: GLOBAL-2026</span>
+                </div>
             </div>
-            <div class="flex justify-between items-center">
-                <select id="local-ccy" onchange="updateCurrencyConfigs()" class="bg-blue-700 text-white font-black p-2 rounded-xl outline-none text-lg">
-                    <option value="JPY">🇯🇵 JPY</option>
-                    <option value="KRW">🇰🇷 KRW</option>
-                    <option value="THB">🇹🇭 THB</option>
-                    <option value="EUR">🇪🇺 EUR</option>
-                    <option value="GBP">🇬🇧 GBP</option>
-                    <option value="VND">🇻🇳 VND</option>
-                </select>
-                
-                <div class="flex items-center space-x-2">
+
+            <div class="bg-blue-600 p-4 rounded-3xl text-white shadow-lg space-y-3">
+                <div class="flex justify-between items-center">
+                    <select id="local-ccy" onchange="updateCurrencyConfigs()" class="bg-blue-700 text-white font-black p-2 rounded-xl outline-none text-lg">
+                        <option value="JPY">🇯🇵 JPY</option>
+                        <option value="KRW">🇰🇷 KRW</option>
+                        <option value="THB">🇹🇭 THB</option>
+                        <option value="EUR">🇪🇺 EUR</option>
+                        <option value="USD">🇺🇸 USD</option>
+                    </select>
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
+                    <select id="home-ccy" onchange="updateCurrencyConfigs()" class="bg-blue-700 text-white font-black p-2 rounded-xl outline-none text-lg text-right">
+                        <option value="TWD">🇹🇼 TWD</option>
+                        <option value="HKD">🇭🇰 HKD</option>
+                        <option value="USD">🇺🇸 USD</option>
+                    </select>
                 </div>
-
-                <select id="home-ccy" onchange="updateCurrencyConfigs()" class="bg-blue-700 text-white font-black p-2 rounded-xl outline-none text-lg text-right">
-                    <option value="TWD">🇹🇼 TWD</option>
-                    <option value="HKD">🇭🇰 HKD</option>
-                    <option value="CNY">🇨🇳 CNY</option>
-                    <option value="USD">🇺🇸 USD</option>
-                </select>
-            </div>
-            <div class="pt-2 border-t border-blue-500/50 flex justify-between items-center">
-                <span class="text-[10px] opacity-70">當前匯率: 1 <span class="local-code">JPY</span> =</span>
-                <div class="flex items-center space-x-2">
-                    <input type="number" id="rate-input" step="0.00001" onchange="manualRate(this.value)" class="w-24 bg-blue-800 border-none rounded px-2 py-0.5 text-right font-mono text-sm">
-                    <span class="home-code text-[10px]">TWD</span>
+                <div class="pt-2 border-t border-blue-500/50 flex justify-between items-center">
+                    <span class="text-[10px] opacity-70">1 <span class="local-code">JPY</span> =</span>
+                    <input type="number" id="rate-input" step="0.00001" onchange="manualRate(this.value)" class="w-24 bg-blue-800 rounded px-2 text-right font-mono text-sm border-none">
+                    <button onclick="autoFetch()" class="bg-blue-400 p-1 rounded-full"><svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg></button>
                 </div>
-                <button onclick="autoFetch()" class="bg-blue-400 p-1 rounded-full active:rotate-180 transition-all">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
-                </button>
             </div>
-        </div>
-    </header>
+        </header>
 
-    <main id="item-list" class="p-4 space-y-3"></main>
+        <main id="item-list" class="p-4 space-y-3"></main>
 
-    <div class="sticky-bottom p-5 border-t border-slate-100">
-        <label for="camera-input" class="w-full bg-blue-600 text-white py-4 rounded-2xl flex items-center justify-center shadow-xl active:scale-95 transition-all mb-4 cursor-pointer">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /><circle cx="12" cy="13" r="3" stroke-width="2"/></svg>
-            <span class="font-bold">拍攝菜單並換算</span>
-        </label>
-        <input type="file" id="camera-input" accept="image/*" capture="environment" onchange="processImage(this)">
+        <div class="sticky-bottom p-5 border-t border-slate-100">
+            <label for="camera-input" class="w-full bg-blue-600 text-white py-4 rounded-2xl flex items-center justify-center shadow-xl active:scale-95 transition-all mb-4 cursor-pointer">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /></svg>
+                <span class="font-bold">拍攝菜單</span>
+            </label>
+            <input type="file" id="camera-input" accept="image/*" capture="environment" onchange="processImage(this)">
 
-        <div class="flex justify-between items-center bg-slate-900 text-white p-5 rounded-[2rem] shadow-2xl">
-            <div class="flex flex-col">
-                <span class="text-[9px] text-slate-500 font-bold uppercase local-code">JPY</span>
-                <span class="text-xl font-bold font-mono-price leading-none" id="total-local">0</span>
+            <div class="flex justify-between items-center bg-slate-900 text-white p-5 rounded-[2rem] shadow-2xl">
+                <div>
+                    <span class="text-[9px] text-slate-500 font-bold local-code uppercase">JPY</span>
+                    <p class="text-xl font-bold font-mono leading-none" id="total-local">0</p>
+                </div>
+                <div class="text-right">
+                    <span class="text-[9px] text-blue-400 font-bold home-code uppercase">TWD</span>
+                    <p class="text-3xl font-black font-mono leading-none text-blue-400" id="total-home">0</p>
+                </div>
             </div>
-            <div class="flex flex-col items-end">
-                <span class="text-[9px] text-blue-400 font-bold uppercase home-code">TWD</span>
-                <span class="text-3xl font-black font-mono-price leading-none text-blue-400" id="total-home">0</span>
+            
+            <div class="flex justify-between mt-3 px-2">
+                <button onclick="showShare()" class="text-[10px] font-bold text-blue-500 uppercase tracking-widest">邀請同伴</button>
+                <button onclick="clearAll()" class="text-[10px] font-bold text-red-300 uppercase tracking-widest">清空數據</button>
             </div>
-        </div>
-
-        <div class="flex justify-between mt-3 px-2">
-            <div class="flex items-center space-x-2">
-                <input type="checkbox" id="svc-toggle" onchange="toggleSvc()" class="w-4 h-4 rounded accent-blue-600">
-                <label for="svc-toggle" class="text-[10px] font-bold text-slate-400 uppercase">10% Svc Charge</label>
-            </div>
-            <button onclick="clearAll()" class="text-[10px] font-bold text-red-300 uppercase underline">Clear All</button>
         </div>
     </div>
 
-    <div id="qr-modal" class="hidden fixed inset-0 bg-black/90 z-[100] flex items-center justify-center p-6" onclick="this.classList.add('hidden')">
+    <div id="qr-modal" class="hidden fixed inset-0 bg-black/95 z-[100] flex items-center justify-center p-6" onclick="this.classList.add('hidden')">
         <div class="bg-white p-8 rounded-[3rem] text-center w-full max-w-sm">
             <div id="qrcode" class="mb-4 flex justify-center"></div>
-            <p class="font-bold text-slate-800">邀請同伴同步點餐</p>
+            <p class="font-bold text-slate-800">請夥伴掃描</p>
         </div>
     </div>
 
     <script>
-        const gun = Gun(['https://gun-manhattan.herokuapp.com/gun']);
-        const room = gun.get('menulens-global-2026'); 
+        // --- 🔐 密碼管理 ---
+        const APP_PASSWORD = "8888"; // <--- 在這裡修改你的密碼
 
-        let state = {
-            localCcy: 'JPY',
-            homeCcy: 'TWD',
-            rate: 0.21,
-            useSvc: false,
-            items: []
-        };
+        function checkPassword() {
+            const val = document.getElementById('pwd-input').value;
+            if(val === APP_PASSWORD) {
+                document.getElementById('auth-overlay').classList.add('hidden');
+                document.getElementById('app-content').classList.remove('invisible');
+                sessionStorage.setItem('isAuthed', 'true');
+                render(false);
+            } else {
+                document.getElementById('error-msg').classList.remove('hidden');
+            }
+        }
+
+        // 檢查是否已經登入過
+        if(sessionStorage.getItem('isAuthed') === 'true') {
+            document.getElementById('auth-overlay').classList.add('hidden');
+            document.getElementById('app-content').classList.remove('invisible');
+        }
+
+        // --- 原有的核心邏輯 ---
+        const gun = Gun(['https://gun-manhattan.herokuapp.com/gun']);
+        const room = gun.get('menulens-secure-2026'); 
+
+        let state = { localCcy: 'JPY', homeCcy: 'TWD', rate: 0.21, useSvc: false, items: [] };
 
         async function autoFetch() {
             try {
@@ -122,7 +138,7 @@
                 const data = await res.json();
                 state.rate = data.rates[state.homeCcy].toFixed(5);
                 render(true);
-            } catch (e) { alert("匯率更新失敗"); }
+            } catch (e) { console.log("Fetch failed"); }
         }
 
         function updateCurrencyConfigs() {
@@ -140,60 +156,46 @@
                 const worker = await Tesseract.createWorker('jpn+eng+kor+tha');
                 const { data: { lines } } = await worker.recognize(input.files[0]);
                 lines.forEach(l => {
-                    const m = l.text.match(/(\d{1,3}(?:,\d{3})*(?:\.\d+)?)/); // 優化數字抓取
+                    const m = l.text.match(/(\d{1,3}(?:,\d{3})*(?:\.\d+)?)/);
                     if (m) {
                         const price = parseFloat(m[1].replace(/,/g, ''));
-                        if (price > 1) {
-                            state.items.push({ id: Date.now()+Math.random(), name: l.text.replace(m[0],'').trim().slice(0,12)||"新項目", price, qty:1, picked:true });
-                        }
+                        if (price > 1) state.items.push({ id: Date.now()+Math.random(), name: l.text.replace(m[0],'').trim().slice(0,10)||"新項目", price, qty:1, picked:true });
                     }
                 });
                 await worker.terminate();
                 render(true);
-            } finally { 
-                document.getElementById('scan-overlay').classList.add('hidden');
-                input.value = ""; 
-            }
+            } finally { document.getElementById('scan-overlay').classList.add('hidden'); }
         }
 
         room.on(d => { if(d && d.c) { state = JSON.parse(d.c); render(false); } });
 
         function render(isLocal = true) {
+            if(sessionStorage.getItem('isAuthed') !== 'true') return;
+
             document.querySelectorAll('.local-code').forEach(el => el.innerText = state.localCcy);
             document.querySelectorAll('.home-code').forEach(el => el.innerText = state.homeCcy);
             document.getElementById('local-ccy').value = state.localCcy;
             document.getElementById('home-ccy').value = state.homeCcy;
             document.getElementById('rate-input').value = state.rate;
-            document.getElementById('svc-toggle').checked = state.useSvc;
 
             const list = document.getElementById('item-list');
             list.innerHTML = state.items.map(item => `
-                <div class="bg-white p-4 rounded-[2rem] border-2 transition-all ${item.picked ? 'border-blue-500 shadow-md' : 'border-transparent shadow-sm'}">
-                    <div class="flex justify-between items-start">
-                        <div onclick="toggle(${item.id})" class="flex-1">
-                            <h3 class="font-bold text-slate-800">${item.name}</h3>
-                            <div class="flex items-center space-x-2 mt-1">
-                                <span class="text-slate-400 text-xs font-mono-price">${state.localCcy} ${item.price.toLocaleString()}</span>
-                                <span class="text-blue-600 font-black text-sm font-mono-price">≈ ${state.homeCcy} ${Math.round(item.price * state.rate).toLocaleString()}</span>
-                            </div>
-                        </div>
-                        <input type="checkbox" ${item.picked ? 'checked' : ''} onchange="toggle(${item.id})" class="w-6 h-6 rounded-full accent-blue-600">
+                <div class="bg-white p-4 rounded-[1.5rem] shadow-sm flex justify-between items-center border-2 ${item.picked ? 'border-blue-500' : 'border-transparent'}">
+                    <div onclick="toggle(${item.id})" class="flex-1">
+                        <h3 class="font-bold text-slate-800">${item.name}</h3>
+                        <p class="text-xs text-slate-400 font-mono">${state.localCcy} ${item.price} ≈ ${state.homeCcy} ${Math.round(item.price * state.rate)}</p>
                     </div>
-                    <div class="flex justify-end mt-2 pt-2 border-t border-slate-50 space-x-4">
-                        <button onclick="removeI(${item.id})" class="text-[9px] text-slate-300 font-black">DELETE</button>
-                        <div class="flex items-center space-x-2">
-                            <button onclick="updQty(${item.id},-1)" class="w-6 h-6 bg-slate-100 rounded-lg">-</button>
-                            <span class="font-bold text-sm w-4 text-center">${item.qty}</span>
-                            <button onclick="updQty(${item.id},1)" class="w-6 h-6 bg-slate-100 rounded-lg">+</button>
-                        </div>
+                    <div class="flex items-center space-x-2">
+                        <button onclick="updQty(${item.id},-1)" class="w-6 h-6 bg-slate-100 rounded">-</button>
+                        <span class="font-bold text-xs">${item.qty}</span>
+                        <button onclick="updQty(${item.id},1)" class="w-6 h-6 bg-slate-100 rounded">+</button>
+                        <button onclick="removeI(${item.id})" class="ml-2 text-slate-200">✕</button>
                     </div>
                 </div>
             `).join('');
 
             const sel = state.items.filter(i => i.picked);
             let localSum = sel.reduce((s, i) => s + (i.price * i.qty), 0);
-            if(state.useSvc) localSum *= 1.1;
-
             document.getElementById('total-local').innerText = Math.round(localSum).toLocaleString();
             document.getElementById('total-home').innerText = Math.round(localSum * state.rate).toLocaleString();
 
@@ -203,8 +205,7 @@
         function toggle(id) { const i = state.items.find(x=>x.id===id); i.picked = !i.picked; render(true); }
         function updQty(id, d) { const i = state.items.find(x=>x.id===id); i.qty = Math.max(1, i.qty+d); render(true); }
         function removeI(id) { state.items = state.items.filter(x=>x.id!==id); render(true); }
-        function toggleSvc() { state.useSvc = document.getElementById('svc-toggle').checked; render(true); }
-        function clearAll() { if(confirm("Clear everything?")) { state.items = []; render(true); } }
+        function clearAll() { if(confirm("確定清空數據？")) { state.items = []; render(true); } }
         function showShare() { document.getElementById('qr-modal').classList.remove('hidden'); document.getElementById('qrcode').innerHTML = ""; new QRCode(document.getElementById("qrcode"), {text: window.location.href, width: 180, height: 180}); }
 
         render(false);
