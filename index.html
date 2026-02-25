@@ -3,40 +3,40 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MenuLens - 雙幣同步版</title>
+    <title>MenuLens - 專業旅遊版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/gun/gun.js"></script>
     <script src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js'></script>
     <style>
-        .sticky-bottom { position: fixed; bottom: 0; left: 0; right: 0; background: white; box-shadow: 0 -4px 15px rgba(0,0,0,0.1); }
+        .sticky-bottom { position: fixed; bottom: 0; left: 0; right: 0; background: white; box-shadow: 0 -4px 20px rgba(0,0,0,0.1); }
         #camera-input { display: none; }
         .scanning-overlay { display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.9); z-index: 100; align-items: center; justify-content: center; color: white; flex-direction: column; }
         .price-tag { font-family: 'Monaco', 'Consolas', monospace; }
+        /* Toggle Switch 樣式 */
+        .dot { transition: all 0.3s ease-in-out; }
+        input:checked ~ .dot { transform: translateX(100%); background-color: #2563eb; }
+        input:checked ~ .block { background-color: #dbeafe; }
     </style>
 </head>
-<body class="bg-slate-50 pb-44">
+<body class="bg-slate-50 pb-48">
 
     <div id="scan-overlay" class="scanning-overlay">
-        <div class="relative w-20 h-20 mb-4">
-            <div class="absolute inset-0 border-4 border-blue-500 rounded-full animate-ping opacity-25"></div>
-            <div class="absolute inset-0 border-4 border-t-blue-500 rounded-full animate-spin"></div>
-        </div>
-        <p class="font-bold text-lg tracking-widest">AI 辨識中...</p>
-        <p class="text-xs text-slate-400 mt-2">正在分析日圓與品項</p>
+        <div class="relative w-16 h-16 mb-4 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+        <p class="font-bold tracking-widest">AI 掃描菜單中...</p>
     </div>
 
     <header class="bg-white p-5 shadow-sm sticky top-0 z-40 flex justify-between items-center border-b border-slate-100">
         <div>
             <h1 class="text-2xl font-black text-slate-800 tracking-tighter">Menu<span class="text-blue-600">Lens</span></h1>
             <div class="flex items-center space-x-1">
-                <span class="w-2 h-2 bg-green-500 rounded-full"></span>
-                <span id="sync-text" class="text-[10px] text-slate-400 uppercase font-bold tracking-widest">Cloud Sync Active</span>
+                <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                <span id="sync-text" class="text-[9px] text-slate-400 uppercase font-black tracking-widest">Live Syncing</span>
             </div>
         </div>
         
         <div class="flex items-center space-x-2">
-            <label for="camera-input" class="bg-slate-900 text-white p-2.5 rounded-xl shadow-lg active:scale-95 transition-all cursor-pointer">
+            <label for="camera-input" class="bg-blue-600 text-white p-2.5 rounded-xl shadow-lg active:scale-95 transition-all cursor-pointer">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -44,7 +44,7 @@
             </label>
             <input type="file" id="camera-input" accept="image/*" capture="environment" onchange="processImage(this)">
             
-            <select id="currency-selector" onchange="changeCurrency()" class="bg-blue-50 text-blue-700 font-bold p-2 rounded-xl text-xs border border-blue-100 outline-none">
+            <select id="currency-selector" onchange="changeCurrency()" class="bg-slate-100 text-slate-700 font-bold p-2 rounded-xl text-xs outline-none">
                 <option value="TWD" data-rate="0.21">台幣 (TWD)</option>
                 <option value="HKD" data-rate="0.052">港幣 (HKD)</option>
                 <option value="CUSTOM">➕ 手動匯率</option>
@@ -52,98 +52,106 @@
         </div>
     </header>
 
-    <main id="item-list" class="p-4 space-y-3">
-        </main>
+    <main id="item-list" class="p-4 space-y-3"></main>
 
     <div class="sticky-bottom p-5 border-t border-slate-100">
+        <div class="flex justify-between items-center mb-4 bg-slate-50 p-3 rounded-xl">
+            <div class="flex items-center space-x-2">
+                <span class="text-sm font-bold text-slate-600">加收 10% 服務費</span>
+                <span class="text-[10px] bg-yellow-100 text-yellow-700 px-1.5 py-0.5 rounded font-bold">TAX/SVC</span>
+            </div>
+            <label class="flex items-center cursor-pointer">
+                <div class="relative">
+                    <input type="checkbox" id="service-fee-toggle" class="sr-only" onchange="toggleServiceFee()">
+                    <div class="block bg-slate-200 w-10 h-6 rounded-full"></div>
+                    <div class="dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition"></div>
+                </div>
+            </label>
+        </div>
+
         <div class="flex justify-between items-end mb-4">
             <div class="flex flex-col">
-                <span class="text-[10px] text-slate-400 font-bold tracking-tighter uppercase">Local Total</span>
+                <span class="text-[10px] text-slate-400 font-bold uppercase tracking-tight">Local Total (JPY)</span>
                 <span class="text-2xl font-black text-slate-700 price-tag">¥<span id="total-jpy">0</span></span>
             </div>
             <div class="flex flex-col items-end">
-                <span class="text-[10px] text-blue-500 font-bold tracking-tighter uppercase" id="target-label">Home Total</span>
+                <span class="text-[10px] text-blue-500 font-bold uppercase tracking-tight" id="target-label">Home Total</span>
                 <span class="text-3xl font-black text-blue-600 price-tag"><span id="symbol">NT$</span><span id="total-target">0</span></span>
             </div>
         </div>
         
-        <button onclick="showShare()" class="w-full bg-slate-100 text-slate-500 py-3 rounded-xl font-bold text-sm active:bg-slate-200 transition-colors">
-            邀請同伴掃碼同步
-        </button>
+        <div class="flex space-x-2">
+            <button onclick="showShare()" class="flex-1 bg-slate-900 text-white py-3 rounded-xl font-bold text-xs active:opacity-80">分享連線</button>
+            <button onclick="clearAll()" class="px-4 bg-slate-100 text-slate-400 rounded-xl text-xs font-bold">清空</button>
+        </div>
     </div>
 
-    <div id="qr-modal" class="hidden fixed inset-0 bg-slate-900/90 z-[60] flex items-center justify-center p-10" onclick="this.classList.add('hidden')">
+    <div id="qr-modal" class="hidden fixed inset-0 bg-slate-900/95 z-[60] flex items-center justify-center p-10" onclick="this.classList.add('hidden')">
         <div class="bg-white p-8 rounded-3xl text-center max-w-sm w-full" onclick="event.stopPropagation()">
-            <div id="qrcode" class="mb-4 flex justify-center border-8 border-slate-50 p-2 rounded-2xl"></div>
-            <p class="font-bold text-slate-800">掃描加入點餐房間</p>
-            <p class="text-xs text-slate-400 mt-2">同步匯率與所有品項數據</p>
+            <div id="qrcode" class="mb-4 flex justify-center border-4 border-slate-50 p-1"></div>
+            <p class="font-bold text-slate-800">讓同伴掃碼同步</p>
+            <button class="mt-4 text-blue-600 text-xs font-bold">關閉</button>
         </div>
     </div>
 
     <script>
         const gun = Gun(['https://gun-manhattan.herokuapp.com/gun']);
-        const room = gun.get('menulens-dual-2026'); 
+        const room = gun.get('menulens-premium-room-2026'); 
 
         let state = {
             rate: 0.21, symbol: 'NT$',
-            items: [{ id: 1, name: '測試品項', price: 1200, qty: 1, picked: true }]
+            useServiceFee: false,
+            items: [{ id: 1, name: '測試品項 (可移除)', price: 1000, qty: 1, picked: true }]
         };
 
-        // --- 核心：影像辨識 ---
         async function processImage(input) {
             if (!input.files || !input.files[0]) return;
             document.getElementById('scan-overlay').style.display = 'flex';
-
             try {
                 const worker = await Tesseract.createWorker('jpn+eng');
                 const result = await worker.recognize(input.files[0]);
-                const lines = result.data.lines;
-
-                lines.forEach(line => {
+                result.data.lines.forEach(line => {
                     const priceMatch = line.text.match(/(?:¥|JPY)?\s?(\d{3,5})/);
                     if (priceMatch) {
                         const price = parseInt(priceMatch[1]);
-                        const name = line.text.replace(priceMatch[0], '').trim().substring(0, 15) || "未命名品項";
-                        if (price > 100) {
-                            state.items.push({ id: Date.now() + Math.random(), name, price, qty: 1, picked: true });
-                        }
+                        const name = line.text.replace(priceMatch[0], '').trim().substring(0, 15) || "菜單品項";
+                        if (price > 50) state.items.push({ id: Date.now() + Math.random(), name, price, qty: 1, picked: true });
                     }
                 });
                 await worker.terminate();
                 render(true);
-            } catch (e) { alert("辨識中斷，請重試"); }
+            } catch (e) { alert("辨識錯誤"); }
             finally { document.getElementById('scan-overlay').style.display = 'none'; }
         }
 
-        // --- 同步與顯示 ---
         room.on((data) => {
             if (data && data.content) {
                 state = JSON.parse(data.content);
-                document.getElementById('sync-text').innerText = "Cloud Sync Active";
                 render(false);
             }
         });
 
         function render(isLocal = true) {
+            document.getElementById('service-fee-toggle').checked = state.useServiceFee;
             const list = document.getElementById('item-list');
             list.innerHTML = state.items.map(item => `
-                <div class="bg-white p-4 rounded-2xl border-2 transition-all ${item.picked ? 'border-blue-500 shadow-md' : 'border-transparent shadow-sm'}">
-                    <div class="flex justify-between items-start mb-3">
+                <div class="bg-white p-4 rounded-2xl border-2 transition-all ${item.picked ? 'border-blue-500' : 'border-transparent'} shadow-sm">
+                    <div class="flex justify-between items-start mb-2">
                         <div onclick="toggle(${item.id})" class="flex-1">
-                            <h3 class="font-bold text-slate-800 text-lg line-clamp-1">${item.name}</h3>
-                            <div class="flex items-center space-x-3 mt-1">
-                                <span class="text-slate-400 font-bold price-tag text-sm">¥${item.price.toLocaleString()}</span>
-                                <span class="text-blue-600 font-black price-tag text-base">≈ ${state.symbol}${Math.round(item.price * state.rate)}</span>
+                            <h3 class="font-bold text-slate-800">${item.name}</h3>
+                            <div class="flex items-center space-x-2">
+                                <span class="text-slate-400 text-xs font-bold">¥${item.price}</span>
+                                <span class="text-blue-600 font-black text-sm">≈ ${state.symbol}${Math.round(item.price * state.rate)}</span>
                             </div>
                         </div>
-                        <input type="checkbox" ${item.picked ? 'checked' : ''} onchange="toggle(${item.id})" class="w-6 h-6 rounded-full accent-blue-600">
+                        <input type="checkbox" ${item.picked ? 'checked' : ''} onchange="toggle(${item.id})" class="w-5 h-5 accent-blue-600">
                     </div>
-                    <div class="flex justify-between items-center bg-slate-50 rounded-xl p-2">
-                        <button onclick="removeItem(${item.id})" class="text-slate-300 hover:text-red-400 px-2">移除</button>
-                        <div class="flex items-center space-x-4">
-                            <button onclick="updateQty(${item.id}, -1)" class="w-8 h-8 rounded-lg bg-white shadow-sm font-bold text-blue-600">-</button>
-                            <span class="font-black text-slate-700">${item.qty}</span>
-                            <button onclick="updateQty(${item.id}, 1)" class="w-8 h-8 rounded-lg bg-white shadow-sm font-bold text-blue-600">+</button>
+                    <div class="flex justify-between items-center mt-2 pt-2 border-t border-slate-50">
+                        <button onclick="removeItem(${item.id})" class="text-[10px] text-slate-300 uppercase font-bold tracking-widest">Remove</button>
+                        <div class="flex items-center space-x-3">
+                            <button onclick="updateQty(${item.id}, -1)" class="w-7 h-7 rounded bg-slate-100 font-bold text-slate-600">-</button>
+                            <span class="font-bold text-sm">${item.qty}</span>
+                            <button onclick="updateQty(${item.id}, 1)" class="w-7 h-7 rounded bg-slate-100 font-bold text-slate-600">+</button>
                         </div>
                     </div>
                 </div>
@@ -151,6 +159,11 @@
 
             updateTotals();
             if (isLocal) room.put({ content: JSON.stringify(state) });
+        }
+
+        function toggleServiceFee() {
+            state.useServiceFee = document.getElementById('service-fee-toggle').checked;
+            render(true);
         }
 
         function toggle(id) {
@@ -170,12 +183,26 @@
             render(true);
         }
 
+        function clearAll() {
+            if(confirm("確定要清空所有品項嗎？")) {
+                state.items = [];
+                render(true);
+            }
+        }
+
         function updateTotals() {
             const selected = state.items.filter(i => i.picked);
-            const totalJPY = selected.reduce((s, i) => s + (i.price * i.qty), 0);
-            document.getElementById('total-jpy').innerText = totalJPY.toLocaleString();
+            let totalJPY = selected.reduce((s, i) => s + (i.price * i.qty), 0);
+            
+            // 如果開啟服務費開關，總價乘以 1.1
+            if (state.useServiceFee) {
+                totalJPY = totalJPY * 1.1;
+            }
+
+            document.getElementById('total-jpy').innerText = Math.round(totalJPY).toLocaleString();
             document.getElementById('total-target').innerText = Math.round(totalJPY * state.rate).toLocaleString();
             document.getElementById('symbol').innerText = state.symbol;
+            document.getElementById('target-label').innerText = state.useServiceFee ? "Home Total (含服務費)" : "Home Total";
         }
 
         function changeCurrency() {
@@ -185,19 +212,15 @@
                 state.symbol = sel.value === 'TWD' ? 'NT$' : '$';
                 render(true);
             } else {
-                const rate = prompt("請輸入自定義匯率 (1 JPY = ?)", state.rate);
-                if(rate) {
-                    state.rate = parseFloat(rate);
-                    state.symbol = '◈';
-                    render(true);
-                }
+                const r = prompt("1 JPY 等於多少您的貨幣？", state.rate);
+                if(r) { state.rate = parseFloat(r); state.symbol = '◈'; render(true); }
             }
         }
 
         function showShare() {
             document.getElementById('qr-modal').classList.remove('hidden');
             document.getElementById('qrcode').innerHTML = "";
-            new QRCode(document.getElementById("qrcode"), { text: window.location.href, width: 200, height: 200 });
+            new QRCode(document.getElementById("qrcode"), { text: window.location.href, width: 180, height: 180 });
         }
 
         render(false);
