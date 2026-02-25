@@ -3,225 +3,185 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MenuLens - 專業旅遊版</title>
+    <title>MenuLens - 相機功能修復版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/gun/gun.js"></script>
     <script src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js'></script>
     <style>
-        .sticky-bottom { position: fixed; bottom: 0; left: 0; right: 0; background: white; box-shadow: 0 -4px 20px rgba(0,0,0,0.1); }
-        #camera-input { display: none; }
-        .scanning-overlay { display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.9); z-index: 100; align-items: center; justify-content: center; color: white; flex-direction: column; }
-        .price-tag { font-family: 'Monaco', 'Consolas', monospace; }
-        /* Toggle Switch 樣式 */
-        .dot { transition: all 0.3s ease-in-out; }
-        input:checked ~ .dot { transform: translateX(100%); background-color: #2563eb; }
-        input:checked ~ .block { background-color: #dbeafe; }
+        .sticky-bottom { position: fixed; bottom: 0; left: 0; right: 0; background: white; shadow: 0 -4px 20px rgba(0,0,0,0.1); z-index: 50; }
+        /* 隱藏原生 input，改用大按鈕觸發 */
+        #camera-input { position: absolute; width: 1px; height: 1px; opacity: 0; overflow: hidden; }
+        .camera-btn { background: #2563eb; color: white; padding: 1rem; border-radius: 1.25rem; display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.4); }
     </style>
 </head>
-<body class="bg-slate-50 pb-48">
+<body class="bg-slate-50 pb-60">
 
-    <div id="scan-overlay" class="scanning-overlay">
-        <div class="relative w-16 h-16 mb-4 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-        <p class="font-bold tracking-widest">AI 掃描菜單中...</p>
+    <div id="scan-overlay" class="hidden fixed inset-0 bg-slate-900/90 z-[100] flex flex-col items-center justify-center text-white p-6">
+        <div class="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+        <p class="font-bold text-lg">AI 正在辨識菜單...</p>
+        <p class="text-xs text-slate-400 mt-2 text-center">初次使用可能需要下載辨識庫 (約 10MB)，請稍候</p>
     </div>
 
-    <header class="bg-white p-5 shadow-sm sticky top-0 z-40 flex justify-between items-center border-b border-slate-100">
-        <div>
+    <header class="bg-white p-5 sticky top-0 z-40 border-b border-slate-100 shadow-sm">
+        <div class="flex justify-between items-center mb-4">
             <h1 class="text-2xl font-black text-slate-800 tracking-tighter">Menu<span class="text-blue-600">Lens</span></h1>
-            <div class="flex items-center space-x-1">
-                <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-                <span id="sync-text" class="text-[9px] text-slate-400 uppercase font-black tracking-widest">Live Syncing</span>
+            <div class="flex items-center space-x-2">
+                <span class="w-2 h-2 bg-green-500 rounded-full"></span>
+                <span class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Live Sync</span>
             </div>
         </div>
-        
-        <div class="flex items-center space-x-2">
-            <label for="camera-input" class="bg-blue-600 text-white p-2.5 rounded-xl shadow-lg active:scale-95 transition-all cursor-pointer">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-            </label>
-            <input type="file" id="camera-input" accept="image/*" capture="environment" onchange="processImage(this)">
-            
-            <select id="currency-selector" onchange="changeCurrency()" class="bg-slate-100 text-slate-700 font-bold p-2 rounded-xl text-xs outline-none">
-                <option value="TWD" data-rate="0.21">台幣 (TWD)</option>
-                <option value="HKD" data-rate="0.052">港幣 (HKD)</option>
-                <option value="CUSTOM">➕ 手動匯率</option>
-            </select>
+
+        <div class="bg-blue-50 p-4 rounded-2xl border border-blue-100 flex justify-between items-center">
+            <div class="flex flex-col">
+                <span class="text-[10px] font-bold text-blue-400 uppercase">1 JPY =</span>
+                <div class="flex items-center space-x-1">
+                    <input type="number" id="rate-input" step="0.0001" onchange="updateRate(this.value)" class="w-20 bg-transparent font-black text-blue-700 text-lg outline-none">
+                    <span id="ccy-text" class="text-xs font-bold text-blue-700">TWD</span>
+                </div>
+            </div>
+            <div class="flex space-x-2">
+                <button onclick="selectC('TWD', 'NT$')" class="px-3 py-1 bg-white rounded-lg text-[10px] font-bold shadow-sm">台幣</button>
+                <button onclick="selectC('HKD', '$')" class="px-3 py-1 bg-white rounded-lg text-[10px] font-bold shadow-sm">港幣</button>
+                <button onclick="fetchLatestRate()" class="p-1 text-blue-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                </button>
+            </div>
         </div>
     </header>
 
     <main id="item-list" class="p-4 space-y-3"></main>
 
     <div class="sticky-bottom p-5 border-t border-slate-100">
-        <div class="flex justify-between items-center mb-4 bg-slate-50 p-3 rounded-xl">
-            <div class="flex items-center space-x-2">
-                <span class="text-sm font-bold text-slate-600">加收 10% 服務費</span>
-                <span class="text-[10px] bg-yellow-100 text-yellow-700 px-1.5 py-0.5 rounded font-bold">TAX/SVC</span>
-            </div>
-            <label class="flex items-center cursor-pointer">
-                <div class="relative">
-                    <input type="checkbox" id="service-fee-toggle" class="sr-only" onchange="toggleServiceFee()">
-                    <div class="block bg-slate-200 w-10 h-6 rounded-full"></div>
-                    <div class="dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition"></div>
-                </div>
+        <div class="flex justify-between items-center mb-4">
+            <label for="camera-input" class="camera-btn flex-1 mr-3">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                <span class="font-bold">開啟相機掃描</span>
             </label>
+            <input type="file" id="camera-input" accept="image/*" capture="environment" onchange="processImage(this)">
+            
+            <button onclick="showShare()" class="p-4 bg-slate-100 rounded-2xl">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+            </button>
         </div>
 
-        <div class="flex justify-between items-end mb-4">
-            <div class="flex flex-col">
-                <span class="text-[10px] text-slate-400 font-bold uppercase tracking-tight">Local Total (JPY)</span>
-                <span class="text-2xl font-black text-slate-700 price-tag">¥<span id="total-jpy">0</span></span>
+        <div class="flex justify-between items-end bg-slate-900 text-white p-4 rounded-3xl">
+            <div>
+                <p class="text-[9px] text-slate-400 font-bold uppercase">JPY Total</p>
+                <p class="text-xl font-bold font-mono text-white">¥<span id="total-jpy">0</span></p>
             </div>
-            <div class="flex flex-col items-end">
-                <span class="text-[10px] text-blue-500 font-bold uppercase tracking-tight" id="target-label">Home Total</span>
-                <span class="text-3xl font-black text-blue-600 price-tag"><span id="symbol">NT$</span><span id="total-target">0</span></span>
+            <div class="text-right border-l border-slate-700 pl-4">
+                <p class="text-[9px] text-blue-400 font-bold uppercase">Home Total</p>
+                <p class="text-2xl font-black text-blue-400 font-mono"><span id="symbol">NT$</span><span id="total-target">0</span></p>
             </div>
         </div>
         
-        <div class="flex space-x-2">
-            <button onclick="showShare()" class="flex-1 bg-slate-900 text-white py-3 rounded-xl font-bold text-xs active:opacity-80">分享連線</button>
-            <button onclick="clearAll()" class="px-4 bg-slate-100 text-slate-400 rounded-xl text-xs font-bold">清空</button>
+        <div class="flex items-center justify-center mt-3 space-x-4">
+            <div class="flex items-center space-x-1">
+                <input type="checkbox" id="svc-toggle" onchange="toggleSvc()" class="w-4 h-4 rounded">
+                <label for="svc-toggle" class="text-xs font-bold text-slate-500">10% 服務費</label>
+            </div>
+            <button onclick="clearItems()" class="text-xs font-bold text-red-400">清空品項</button>
         </div>
     </div>
 
-    <div id="qr-modal" class="hidden fixed inset-0 bg-slate-900/95 z-[60] flex items-center justify-center p-10" onclick="this.classList.add('hidden')">
-        <div class="bg-white p-8 rounded-3xl text-center max-w-sm w-full" onclick="event.stopPropagation()">
-            <div id="qrcode" class="mb-4 flex justify-center border-4 border-slate-50 p-1"></div>
+    <div id="qr-modal" class="hidden fixed inset-0 bg-black/90 z-[100] flex items-center justify-center p-6" onclick="this.classList.add('hidden')">
+        <div class="bg-white p-8 rounded-[2.5rem] text-center w-full max-w-sm">
+            <div id="qrcode" class="mb-4 flex justify-center"></div>
             <p class="font-bold text-slate-800">讓同伴掃碼同步</p>
-            <button class="mt-4 text-blue-600 text-xs font-bold">關閉</button>
         </div>
     </div>
 
     <script>
         const gun = Gun(['https://gun-manhattan.herokuapp.com/gun']);
-        const room = gun.get('menulens-premium-room-2026'); 
+        const room = gun.get('menulens-v5-final-2026'); 
 
-        let state = {
-            rate: 0.21, symbol: 'NT$',
-            useServiceFee: false,
-            items: [{ id: 1, name: '測試品項 (可移除)', price: 1000, qty: 1, picked: true }]
-        };
+        let state = { rate: 0.211, currency: 'TWD', symbol: 'NT$', useSvc: false, items: [] };
+
+        async function fetchLatestRate() {
+            try {
+                const res = await fetch(`https://open.er-api.com/v6/latest/JPY`);
+                const data = await res.json();
+                state.rate = data.rates[state.currency].toFixed(5);
+                render(true);
+            } catch (e) { console.log("Rate update failed"); }
+        }
+
+        function selectC(ccy, sym) { state.currency = ccy; state.symbol = sym; fetchLatestRate(); }
+        function updateRate(v) { state.rate = parseFloat(v); render(true); }
 
         async function processImage(input) {
-            if (!input.files || !input.files[0]) return;
-            document.getElementById('scan-overlay').style.display = 'flex';
+            if (!input.files[0]) return;
+            document.getElementById('scan-overlay').classList.remove('hidden');
             try {
                 const worker = await Tesseract.createWorker('jpn+eng');
-                const result = await worker.recognize(input.files[0]);
-                result.data.lines.forEach(line => {
-                    const priceMatch = line.text.match(/(?:¥|JPY)?\s?(\d{3,5})/);
-                    if (priceMatch) {
-                        const price = parseInt(priceMatch[1]);
-                        const name = line.text.replace(priceMatch[0], '').trim().substring(0, 15) || "菜單品項";
-                        if (price > 50) state.items.push({ id: Date.now() + Math.random(), name, price, qty: 1, picked: true });
+                const { data: { lines } } = await worker.recognize(input.files[0]);
+                lines.forEach(l => {
+                    const m = l.text.match(/(?:¥|JPY)?\s?(\d{3,5})/);
+                    if (m) {
+                        state.items.push({ id: Date.now()+Math.random(), name: l.text.replace(m[0],'').trim().slice(0,12)||"菜單品項", price: parseInt(m[1]), qty:1, picked:true });
                     }
                 });
                 await worker.terminate();
                 render(true);
-            } catch (e) { alert("辨識錯誤"); }
-            finally { document.getElementById('scan-overlay').style.display = 'none'; }
+            } catch (e) { alert("辨識發生錯誤，請確保網路通暢並再次拍照"); }
+            finally { 
+                document.getElementById('scan-overlay').classList.add('hidden');
+                input.value = ""; 
+            }
         }
 
-        room.on((data) => {
-            if (data && data.content) {
-                state = JSON.parse(data.content);
-                render(false);
-            }
-        });
+        room.on(d => { if(d && d.c) { state = JSON.parse(d.c); render(false); } });
 
         function render(isLocal = true) {
-            document.getElementById('service-fee-toggle').checked = state.useServiceFee;
+            document.getElementById('rate-input').value = state.rate;
+            document.getElementById('ccy-text').innerText = state.currency;
+            document.getElementById('svc-toggle').checked = state.useSvc;
+            
             const list = document.getElementById('item-list');
             list.innerHTML = state.items.map(item => `
-                <div class="bg-white p-4 rounded-2xl border-2 transition-all ${item.picked ? 'border-blue-500' : 'border-transparent'} shadow-sm">
-                    <div class="flex justify-between items-start mb-2">
+                <div class="bg-white p-4 rounded-3xl border-2 transition-all ${item.picked ? 'border-blue-500 shadow-md' : 'border-transparent shadow-sm'}">
+                    <div class="flex justify-between items-start">
                         <div onclick="toggle(${item.id})" class="flex-1">
-                            <h3 class="font-bold text-slate-800">${item.name}</h3>
+                            <h3 class="font-bold text-slate-800 text-lg">${item.name}</h3>
                             <div class="flex items-center space-x-2">
-                                <span class="text-slate-400 text-xs font-bold">¥${item.price}</span>
-                                <span class="text-blue-600 font-black text-sm">≈ ${state.symbol}${Math.round(item.price * state.rate)}</span>
+                                <span class="text-slate-400 text-xs font-bold font-mono">¥${item.price}</span>
+                                <span class="text-blue-600 font-black text-sm font-mono">≈ ${state.symbol}${Math.round(item.price * state.rate)}</span>
                             </div>
                         </div>
-                        <input type="checkbox" ${item.picked ? 'checked' : ''} onchange="toggle(${item.id})" class="w-5 h-5 accent-blue-600">
+                        <input type="checkbox" ${item.picked ? 'checked' : ''} onchange="toggle(${item.id})" class="w-6 h-6 rounded-full accent-blue-600">
                     </div>
-                    <div class="flex justify-between items-center mt-2 pt-2 border-t border-slate-50">
-                        <button onclick="removeItem(${item.id})" class="text-[10px] text-slate-300 uppercase font-bold tracking-widest">Remove</button>
-                        <div class="flex items-center space-x-3">
-                            <button onclick="updateQty(${item.id}, -1)" class="w-7 h-7 rounded bg-slate-100 font-bold text-slate-600">-</button>
-                            <span class="font-bold text-sm">${item.qty}</span>
-                            <button onclick="updateQty(${item.id}, 1)" class="w-7 h-7 rounded bg-slate-100 font-bold text-slate-600">+</button>
+                    <div class="flex justify-end mt-3 pt-3 border-t border-slate-50 space-x-4">
+                        <button onclick="removeI(${item.id})" class="text-[10px] text-slate-300 font-black uppercase">Delete</button>
+                        <div class="flex items-center space-x-3 bg-slate-50 rounded-xl px-2 py-1">
+                            <button onclick="updQty(${item.id},-1)" class="w-7 h-7 bg-white shadow-sm rounded-lg font-bold text-blue-600">-</button>
+                            <span class="font-bold text-slate-700 w-4 text-center text-sm">${item.qty}</span>
+                            <button onclick="updQty(${item.id},1)" class="w-7 h-7 bg-white shadow-sm rounded-lg font-bold text-blue-600">+</button>
                         </div>
                     </div>
                 </div>
             `).join('');
 
-            updateTotals();
-            if (isLocal) room.put({ content: JSON.stringify(state) });
-        }
+            const sel = state.items.filter(i => i.picked);
+            let jpy = sel.reduce((s, i) => s + (i.price * i.qty), 0);
+            if(state.useSvc) jpy *= 1.1;
 
-        function toggleServiceFee() {
-            state.useServiceFee = document.getElementById('service-fee-toggle').checked;
-            render(true);
-        }
-
-        function toggle(id) {
-            const item = state.items.find(i => i.id === id);
-            item.picked = !item.picked;
-            render(true);
-        }
-
-        function updateQty(id, delta) {
-            const item = state.items.find(i => i.id === id);
-            item.qty = Math.max(1, item.qty + delta);
-            render(true);
-        }
-
-        function removeItem(id) {
-            state.items = state.items.filter(i => i.id !== id);
-            render(true);
-        }
-
-        function clearAll() {
-            if(confirm("確定要清空所有品項嗎？")) {
-                state.items = [];
-                render(true);
-            }
-        }
-
-        function updateTotals() {
-            const selected = state.items.filter(i => i.picked);
-            let totalJPY = selected.reduce((s, i) => s + (i.price * i.qty), 0);
-            
-            // 如果開啟服務費開關，總價乘以 1.1
-            if (state.useServiceFee) {
-                totalJPY = totalJPY * 1.1;
-            }
-
-            document.getElementById('total-jpy').innerText = Math.round(totalJPY).toLocaleString();
-            document.getElementById('total-target').innerText = Math.round(totalJPY * state.rate).toLocaleString();
+            document.getElementById('total-jpy').innerText = Math.round(jpy).toLocaleString();
+            document.getElementById('total-target').innerText = Math.round(jpy * state.rate).toLocaleString();
             document.getElementById('symbol').innerText = state.symbol;
-            document.getElementById('target-label').innerText = state.useServiceFee ? "Home Total (含服務費)" : "Home Total";
+
+            if(isLocal) room.put({ c: JSON.stringify(state) });
         }
 
-        function changeCurrency() {
-            const sel = document.getElementById('currency-selector');
-            if(sel.value !== 'CUSTOM') {
-                state.rate = parseFloat(sel.options[sel.selectedIndex].dataset.rate);
-                state.symbol = sel.value === 'TWD' ? 'NT$' : '$';
-                render(true);
-            } else {
-                const r = prompt("1 JPY 等於多少您的貨幣？", state.rate);
-                if(r) { state.rate = parseFloat(r); state.symbol = '◈'; render(true); }
-            }
-        }
-
-        function showShare() {
-            document.getElementById('qr-modal').classList.remove('hidden');
-            document.getElementById('qrcode').innerHTML = "";
-            new QRCode(document.getElementById("qrcode"), { text: window.location.href, width: 180, height: 180 });
-        }
+        function toggle(id) { const i = state.items.find(x=>x.id===id); i.picked = !i.picked; render(true); }
+        function updQty(id, d) { const i = state.items.find(x=>x.id===id); i.qty = Math.max(1, i.qty+d); render(true); }
+        function removeI(id) { state.items = state.items.filter(x=>x.id!==id); render(true); }
+        function toggleSvc() { state.useSvc = document.getElementById('svc-toggle').checked; render(true); }
+        function clearItems() { if(confirm("確定清空？")) { state.items = []; render(true); } }
+        function showShare() { document.getElementById('qr-modal').classList.remove('hidden'); document.getElementById('qrcode').innerHTML = ""; new QRCode(document.getElementById("qrcode"), {text: window.location.href, width: 180, height: 180}); }
 
         render(false);
     </script>
