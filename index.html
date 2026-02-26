@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MenuLens - 智慧翻譯版</title>
+    <title>MenuLens - 多圖累加版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/gun/gun.js"></script>
@@ -11,17 +11,19 @@
     <style>
         .sticky-bottom { position: fixed; bottom: 0; left: 0; right: 0; background: white; box-shadow: 0 -4px 20px rgba(0,0,0,0.1); z-index: 50; }
         #camera-input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+        .item-card { transition: all 0.2s ease; }
+        .unpicked { opacity: 0.5; filter: grayscale(0.8); }
         .loading-bar { height: 4px; background: #2563eb; width: 0%; transition: width 0.3s; }
     </style>
 </head>
-<body class="bg-slate-50 pb-64">
+<body class="bg-slate-50 pb-72">
 
-    <div id="auth-screen" class="fixed inset-0 bg-slate-900 z-[200] flex items-center justify-center p-6 text-white">
-        <div class="bg-white p-8 rounded-[2.5rem] w-full max-w-sm shadow-2xl text-center">
-            <h2 class="text-2xl font-black text-slate-800 mb-6">🔒 輸入密碼</h2>
+    <div id="auth-screen" class="fixed inset-0 bg-slate-900 z-[200] flex items-center justify-center p-6 text-white text-center">
+        <div class="bg-white p-8 rounded-[2.5rem] w-full max-w-sm shadow-2xl">
+            <h2 class="text-2xl font-black text-slate-800 mb-6">🔒 多人同步房間</h2>
             <input type="number" id="pwd-input" pattern="\d*" inputmode="numeric" placeholder="請輸入 4 位數密碼" 
-                   class="w-full bg-slate-100 border-none rounded-2xl p-4 text-center font-bold text-3xl mb-4 outline-none text-slate-800">
-            <button onclick="unlockApp()" class="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold shadow-xl active:scale-95 transition-all">進入並開始翻譯</button>
+                   class="w-full bg-slate-100 border-none rounded-2xl p-4 text-center font-bold text-3xl mb-4 outline-none text-slate-800 tracking-widest">
+            <button onclick="unlockApp()" class="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold shadow-xl active:scale-95 transition-all">進入房間</button>
         </div>
     </div>
 
@@ -29,27 +31,28 @@
         <header class="bg-white p-5 sticky top-0 z-40 border-b border-slate-100 shadow-sm flex justify-between items-center">
             <div>
                 <h1 class="text-2xl font-black text-slate-800 tracking-tighter">Menu<span class="text-blue-600">Lens</span></h1>
-                <p class="text-[9px] text-blue-500 font-bold uppercase tracking-widest">JP ➔ TW Translate Active</p>
+                <p class="text-[9px] text-slate-400 font-bold uppercase tracking-widest">Multi-Scan Mode Active</p>
             </div>
-            <button onclick="logout()" class="text-[10px] bg-slate-100 text-slate-500 px-3 py-1.5 rounded-full font-bold">切換房間</button>
+            <button onclick="logout()" class="text-[10px] bg-slate-100 text-slate-500 px-3 py-1.5 rounded-full font-bold">登出</button>
         </header>
 
         <div class="p-4 space-y-4">
-            <div class="bg-indigo-900 p-4 rounded-3xl text-white shadow-lg space-y-3">
-                <div class="flex justify-between items-center font-mono text-sm">
-                    <span class="opacity-70">1 JPY =</span>
-                    <input type="number" id="rate-display" step="0.0001" onchange="manualRate(this.value)" class="bg-indigo-800 text-right px-2 rounded w-24 outline-none border-none text-blue-300 font-bold">
-                    <span class="text-[10px] opacity-70">TWD</span>
+            <div class="bg-indigo-900 p-4 rounded-3xl text-white shadow-lg space-y-2">
+                <div class="flex justify-between items-center font-mono text-xs">
+                    <span class="opacity-70">匯率 1 JPY =</span>
+                    <input type="number" id="rate-display" step="0.0001" onchange="manualRate(this.value)" class="bg-indigo-800 text-right px-2 rounded w-20 outline-none border-none text-blue-300 font-bold">
+                    <span class="opacity-70">TWD</span>
                 </div>
             </div>
 
-            <main id="item-list" class="space-y-3"></main>
+            <main id="item-list" class="space-y-3">
+                </main>
         </div>
 
         <div class="sticky-bottom p-5 border-t border-slate-100 bg-white/95 backdrop-blur-md">
             <div id="progress-container" class="hidden mb-3">
                 <div class="flex justify-between text-[10px] font-bold mb-1">
-                    <span id="process-status" class="text-blue-600">正在辨識與翻譯...</span>
+                    <span id="process-status" class="text-blue-600 italic">正在辨識第 1 張照片...</span>
                     <span id="progress-text">0%</span>
                 </div>
                 <div class="w-full bg-slate-100 rounded-full h-1">
@@ -58,20 +61,33 @@
             </div>
 
             <label for="camera-input" class="w-full bg-blue-600 text-white py-4 rounded-2xl flex items-center justify-center shadow-xl active:scale-95 transition-all mb-4 cursor-pointer">
-                <span class="font-bold text-lg">📸 拍攝菜單（自動翻中文）</span>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                <span class="font-bold text-lg">拍攝或加入多張照片</span>
             </label>
-            <input type="file" id="camera-input" accept="image/*" capture="environment" onchange="processImage(this)">
+            <input type="file" id="camera-input" accept="image/*" capture="environment" multiple onchange="processMultipleImages(this)">
 
-            <div class="flex justify-between items-center bg-slate-900 text-white p-5 rounded-[2rem]">
+            <div class="flex justify-between items-center bg-slate-900 text-white p-5 rounded-[2.5rem] border-4 border-slate-800">
                 <div>
-                    <span class="text-[9px] text-slate-500 font-bold">日圓總計</span>
+                    <span class="text-[9px] text-slate-500 font-bold uppercase tracking-widest">Total JPY</span>
                     <p class="text-xl font-bold font-mono" id="total-local">0</p>
                 </div>
-                <div class="text-right border-l border-slate-800 pl-6">
-                    <span class="text-[9px] text-blue-400 font-bold uppercase">TWD Total</span>
+                <div class="text-right border-l border-slate-700 pl-6">
+                    <span class="text-[9px] text-blue-400 font-bold uppercase tracking-widest">Total TWD</span>
                     <p class="text-3xl font-black font-mono text-blue-400" id="total-home">0</p>
                 </div>
             </div>
+            
+            <div class="flex justify-between mt-3 px-4">
+                <button onclick="showSyncQR()" class="text-[10px] font-bold text-blue-500 uppercase">邀請夥伴</button>
+                <button onclick="clearAll()" class="text-[10px] font-bold text-red-400 uppercase">清空所有紀錄</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="qr-modal" class="hidden fixed inset-0 bg-black/90 z-[300] flex items-center justify-center p-6" onclick="this.classList.add('hidden')">
+        <div class="bg-white p-8 rounded-[3rem] text-center w-full max-w-sm">
+            <div id="qrcode" class="mb-4 flex justify-center"></div>
+            <p class="font-bold text-slate-800">夥伴掃描同步房間</p>
         </div>
     </div>
 
@@ -79,12 +95,11 @@
         let gun, room, currentPwd;
         let state = { rate: 0.21, items: [] };
 
-        // --- 🔐 房間管理 ---
         function unlockApp() {
             const pwd = document.getElementById('pwd-input').value;
             if (pwd.length < 1) return;
             currentPwd = pwd;
-            const roomId = 'room-v7-translate-' + btoa(pwd).substring(0, 10);
+            const roomId = 'room-v9-multi-' + btoa(pwd).substring(0, 10);
             gun = Gun(['https://gun-manhattan.herokuapp.com/gun']);
             room = gun.get(roomId);
             room.on(d => { if(d && d.c) { state = JSON.parse(d.c); render(false); } });
@@ -100,46 +115,41 @@
 
         function logout() { sessionStorage.removeItem('ml_pwd'); location.reload(); }
 
-        // --- 🌍 翻譯核心 ---
         async function translateText(text) {
             try {
                 const res = await fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=ja&tl=zh-TW&dt=t&q=${encodeURI(text)}`);
                 const data = await res.json();
                 return data[0][0][0];
-            } catch (e) {
-                return text; // 翻譯失敗則回傳原文字
-            }
+            } catch (e) { return text; }
         }
 
-        // --- 📸 增強辨識與翻譯邏輯 ---
-        async function processImage(input) {
-            if (!input.files[0]) return;
+        // --- 📸 核心：多圖處理邏輯 ---
+        async function processMultipleImages(input) {
+            if (!input.files || input.files.length === 0) return;
+            
+            const files = Array.from(input.files);
             const progContainer = document.getElementById('progress-container');
             const lBar = document.getElementById('loading-bar');
             const pText = document.getElementById('progress-text');
             const pStatus = document.getElementById('process-status');
             
             progContainer.classList.remove('hidden');
-            pStatus.innerText = "正在辨識日文菜單...";
 
-            try {
-                const worker = await Tesseract.createWorker({
-                    logger: m => {
-                        if (m.status === 'recognizing text') {
-                            const p = Math.floor(m.progress * 100);
-                            lBar.style.width = p + '%';
-                            pText.innerText = p + '%';
-                        }
+            const worker = await Tesseract.createWorker({
+                logger: m => {
+                    if (m.status === 'recognizing text') {
+                        const p = Math.floor(m.progress * 100);
+                        lBar.style.width = p + '%';
+                        pText.innerText = p + '%';
                     }
-                });
-                
-                await worker.loadLanguage('jpn+eng');
-                await worker.initialize('jpn+eng');
-                await worker.setParameters({ tessedit_char_whitelist: '0123456789¥.,JPY ぁあぃいぅうぇえぉおかがきぎくぐけげこごさざしじすずせぜそぞただちぢっつづてでとどなにぬねのはばぱひびぴふぶぷへべぺほぼぽまみむめもゃやゅゆょよらりるれろゎわゐゑをんァアィイゥウェエォオカガキギクグケゲコゴサザシジスズセゼソゾタダチヂッツヅテデトドナニヌネノハバパヒビピフブプヘベペホボポマミムメモャヤュユョヨラリルレロヮワヰヱヲンヴヵヶ一-龠' });
+                }
+            });
+            await worker.loadLanguage('jpn+eng');
+            await worker.initialize('jpn+eng');
 
-                const { data: { lines } } = await worker.recognize(input.files[0]);
-                
-                pStatus.innerText = "翻譯中文中...";
+            for (let i = 0; i < files.length; i++) {
+                pStatus.innerText = `正在辨識第 ${i + 1} / ${files.length} 張照片...`;
+                const { data: { lines } } = await worker.recognize(files[i]);
                 
                 for (let l of lines) {
                     const m = l.text.match(/(?:¥|JPY| )?\s?(\d{1,3}(?:,\d{3})*(?:\.\d+)?)/);
@@ -147,47 +157,54 @@
                         const price = parseFloat(m[1].replace(/,/g, ''));
                         if (price > 10) {
                             const rawName = l.text.replace(m[0],'').trim();
-                            const translatedName = rawName.length > 1 ? await translateText(rawName) : "未知品項";
+                            const translatedName = rawName.length > 1 ? await translateText(rawName) : "掃描品項";
                             
+                            // 將新辨識到的品項推入 state，但不勾選
                             state.items.push({ 
-                                id: Date.now()+Math.random(), 
+                                id: Date.now() + Math.random(), 
                                 name: translatedName, 
-                                rawName: rawName, // 保留原日文
+                                rawName: rawName,
                                 price, 
-                                qty:1, 
-                                picked:true 
+                                qty: 1, 
+                                picked: false 
                             });
                         }
                     }
                 }
-
-                await worker.terminate();
-                render(true);
-            } catch (e) {
-                alert("辨識發生錯誤");
-            } finally {
-                progContainer.classList.add('hidden');
-                input.value = "";
+                render(true); // 每處理完一張就更新一次 UI
             }
+
+            await worker.terminate();
+            progContainer.classList.add('hidden');
+            input.value = ""; // 重置 input 讓下次可以選取
         }
 
-        // --- UI 渲染 ---
         function render(isLocal = true) {
             document.getElementById('rate-display').value = state.rate;
-
             const list = document.getElementById('item-list');
-            list.innerHTML = state.items.map(item => `
-                <div class="bg-white p-4 rounded-3xl shadow-sm flex justify-between items-center border-2 ${item.picked ? 'border-blue-500' : 'border-transparent'}">
-                    <div onclick="toggle(${item.id})" class="flex-1">
-                        <h3 class="font-bold text-slate-800 text-lg">${item.name}</h3>
-                        <p class="text-[10px] text-slate-400 italic mb-1">${item.rawName || ''}</p>
-                        <p class="text-xs text-blue-600 font-bold font-mono">¥${item.price.toLocaleString()} ≈ NT$ ${Math.round(item.price * state.rate).toLocaleString()}</p>
+            
+            list.innerHTML = state.items.length === 0 ? 
+                `<div class="text-center py-20 text-slate-300 font-bold">請拍攝菜單以加入品項</div>` :
+                state.items.map(item => `
+                <div onclick="toggle(${item.id})" class="item-card bg-white p-4 rounded-3xl shadow-sm flex justify-between items-center border-2 ${item.picked ? 'border-blue-500' : 'border-transparent unpicked'}">
+                    <div class="flex-1">
+                        <div class="flex items-center space-x-2">
+                            <div class="w-5 h-5 rounded-full border-2 ${item.picked ? 'bg-blue-500 border-blue-500' : 'border-slate-300'} flex items-center justify-center">
+                                ${item.picked ? '<svg class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>' : ''}
+                            </div>
+                            <h3 class="font-bold text-slate-800 text-lg line-clamp-1">${item.name}</h3>
+                        </div>
+                        <p class="text-[10px] text-slate-400 italic ml-7 truncate">${item.rawName || ''}</p>
+                        <p class="text-xs text-blue-600 font-bold font-mono ml-7 mt-1">¥${item.price.toLocaleString()} ≈ NT$ ${Math.round(item.price * state.rate).toLocaleString()}</p>
                     </div>
-                    <div class="flex items-center space-x-2">
-                        <button onclick="updQty(${item.id},-1)" class="w-8 h-8 bg-slate-100 rounded-lg">-</button>
-                        <span class="font-bold text-sm">${item.qty}</span>
-                        <button onclick="updQty(${item.id},1)" class="w-8 h-8 bg-slate-100 rounded-lg">+</button>
-                    </div>
+                    ${item.picked ? `
+                    <div class="flex items-center space-x-2" onclick="event.stopPropagation()">
+                        <button onclick="updQty(${item.id},-1)" class="w-8 h-8 bg-slate-50 border border-slate-200 rounded-xl shadow-sm">-</button>
+                        <span class="font-bold text-sm w-4 text-center">${item.qty}</span>
+                        <button onclick="updQty(${item.id},1)" class="w-8 h-8 bg-slate-50 border border-slate-200 rounded-xl shadow-sm">+</button>
+                    </div>` : `
+                    <button onclick="removeI(${item.id}); event.stopPropagation();" class="text-slate-200 p-2">✕</button>
+                    `}
                 </div>
             `).join('');
 
@@ -201,8 +218,14 @@
 
         function toggle(id) { const i = state.items.find(x=>x.id===id); i.picked = !i.picked; render(true); }
         function updQty(id, d) { const i = state.items.find(x=>x.id===id); i.qty = Math.max(1, i.qty+d); render(true); }
+        function removeI(id) { state.items = state.items.filter(x=>x.id!==id); render(true); }
         function manualRate(v) { state.rate = parseFloat(v); render(true); }
-        function clearAll() { if(confirm("清空？")) { state.items = []; render(true); } }
+        function clearAll() { if(confirm("確定清空所有品項？")) { state.items = []; render(true); } }
+        function showSyncQR() { 
+            document.getElementById('qr-modal').classList.remove('hidden');
+            document.getElementById('qrcode').innerHTML = "";
+            new QRCode(document.getElementById("qrcode"), {text: window.location.href, width: 180, height: 180});
+        }
     </script>
 </body>
 </html>
