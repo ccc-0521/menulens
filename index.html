@@ -3,110 +3,133 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MenuLens - 專業手動修正版</title>
+    <title>MenuLens HK - 終極點餐機</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/gun/gun.js"></script>
     <script src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js'></script>
     <style>
         :root { --main-bg: #FFFBEB; --accent-orange: #FB923C; --soft-brown: #78350F; --deep-purple: #581C87; }
-        body { background-color: white; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
-        .food-card { background-color: var(--main-bg); border: 2px solid var(--accent-orange); transition: all 0.2s; position: relative; }
-        .food-card.unpicked { filter: grayscale(0.6); opacity: 0.6; transform: scale(0.97); }
+        body { background-color: white; font-family: -apple-system, system-ui, sans-serif; -webkit-tap-highlight-color: transparent; }
+        .food-card { background-color: var(--main-bg); border: 2px solid var(--accent-orange); transition: all 0.3s ease; }
+        .food-card.unpicked { filter: grayscale(0.8); opacity: 0.5; transform: scale(0.96); border-color: #E5E7EB; background-color: #F9FAFB; }
         .category-btn.active { background-color: var(--deep-purple); color: white; border-color: var(--deep-purple); }
-        .sticky-bottom { position: fixed; bottom: 0; left: 0; right: 0; background: white; box-shadow: 0 -10px 25px rgba(0,0,0,0.05); z-index: 50; }
-        .edit-badge { position: absolute; top: 10px; right: 50px; font-size: 10px; background: #E5E7EB; padding: 2px 6px; rounded: 4px; color: #6B7280; }
+        .sticky-footer { position: fixed; bottom: 0; left: 0; right: 0; background: white; box-shadow: 0 -10px 30px rgba(0,0,0,0.1); z-index: 50; border-radius: 2.5rem 2.5rem 0 0; }
+        .edit-hint { position: absolute; top: 12px; right: 12px; font-size: 9px; color: var(--accent-orange); font-weight: bold; text-transform: uppercase; }
+        ::-webkit-scrollbar { display: none; }
     </style>
 </head>
-<body class="pb-60">
+<body class="pb-72">
 
     <div id="auth-screen" class="fixed inset-0 bg-slate-900 z-[200] flex items-center justify-center p-6 text-white text-center">
-        <div class="bg-white p-8 rounded-[2.5rem] w-full max-w-sm shadow-2xl">
-            <h2 class="text-2xl font-black text-slate-800 mb-6 font-serif uppercase tracking-widest">MenuLens</h2>
-            <input type="number" id="pwd-input" pattern="\d*" inputmode="numeric" placeholder="請輸入密碼" 
-                   class="w-full bg-slate-100 rounded-2xl p-4 text-center font-bold text-3xl mb-4 text-slate-800 tracking-[0.8rem] outline-none">
-            <button onclick="unlockApp()" class="w-full bg-orange-500 text-white py-4 rounded-2xl font-black shadow-lg active:scale-95 transition-all">解鎖房間</button>
+        <div class="bg-white p-10 rounded-[3rem] w-full max-w-sm shadow-2xl">
+            <div class="text-6xl mb-4">🍽️</div>
+            <h2 class="text-2xl font-black text-slate-800 mb-6 font-serif">MenuLens HK</h2>
+            <input type="number" id="pwd-input" pattern="\d*" inputmode="numeric" placeholder="房間密碼" 
+                   class="w-full bg-slate-100 rounded-3xl p-5 text-center font-black text-3xl mb-6 text-slate-800 tracking-widest outline-none border-4 border-transparent focus:border-orange-400">
+            <button onclick="unlockApp()" class="w-full bg-orange-500 text-white py-5 rounded-3xl font-black text-xl shadow-xl active:scale-95 transition-all">進入</button>
         </div>
     </div>
 
     <div id="app-body" class="hidden">
-        <header class="p-4 sticky top-0 bg-white z-40 border-b">
-            <div class="flex justify-between items-center mb-4">
-                <h1 class="text-2xl font-black text-slate-800">Menu<span class="text-orange-500">Lens</span></h1>
+        <header class="p-5 sticky top-0 bg-white z-40 border-b">
+            <div class="flex justify-between items-center mb-6">
+                <h1 class="text-3xl font-black text-slate-800 tracking-tighter italic">Menu<span class="text-orange-500">Lens</span></h1>
                 <div class="flex items-center space-x-3">
-                    <button onclick="logout()" class="text-[10px] text-slate-400 font-bold underline">登出</button>
-                    <label for="camera-input" class="bg-purple-900 text-white p-2.5 rounded-xl cursor-pointer shadow-lg active:scale-90 transition-transform">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path></svg>
+                    <button onclick="logout()" class="text-xs font-bold text-slate-400 underline">登出</button>
+                    <label for="camera-input" class="bg-purple-900 text-white p-3 rounded-2xl cursor-pointer shadow-lg active:scale-90">
+                        <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path></svg>
                     </label>
                     <input type="file" id="camera-input" accept="image/*" capture="environment" multiple onchange="processImages(this)">
                 </div>
             </div>
 
-            <div class="flex space-x-2 overflow-x-auto no-scrollbar" id="category-bar">
+            <div class="flex space-x-2 overflow-x-auto no-scrollbar mb-4">
                 <button onclick="filterCat('all')" class="category-btn active px-6 py-2 rounded-full text-xs font-black border-2 border-slate-100 whitespace-nowrap transition-all">全部</button>
-                <button onclick="filterCat('主菜')" class="category-btn px-6 py-2 rounded-full text-xs font-black border-2 border-slate-100 whitespace-nowrap transition-all">主食</button>
+                <button onclick="filterCat('主菜')" class="category-btn px-6 py-2 rounded-full text-xs font-black border-2 border-slate-100 whitespace-nowrap transition-all">主菜</button>
                 <button onclick="filterCat('配菜')" class="category-btn px-6 py-2 rounded-full text-xs font-black border-2 border-slate-100 whitespace-nowrap transition-all">配菜</button>
                 <button onclick="filterCat('飲料')" class="category-btn px-6 py-2 rounded-full text-xs font-black border-2 border-slate-100 whitespace-nowrap transition-all">飲料</button>
             </div>
+
+            <div class="bg-blue-600 p-4 rounded-[2rem] text-white shadow-lg space-y-3">
+                <div class="flex justify-between items-center">
+                    <select id="local-ccy" onchange="updateCcy()" class="bg-blue-700 text-white font-bold p-2 rounded-xl outline-none">
+                        <option value="JPY">🇯🇵 JPY</option>
+                        <option value="KRW">🇰🇷 KRW</option>
+                        <option value="THB">🇹🇭 THB</option>
+                        <option value="EUR">🇪🇺 EUR</option>
+                    </select>
+                    <span class="opacity-50 text-xl">➜</span>
+                    <select id="home-ccy" onchange="updateCcy()" class="bg-blue-700 text-white font-bold p-2 rounded-xl outline-none text-right">
+                        <option value="HKD">🇭🇰 HKD</option>
+                        <option value="TWD">🇹🇼 TWD</option>
+                        <option value="USD">🇺🇸 USD</option>
+                    </select>
+                </div>
+                <div class="pt-2 border-t border-blue-500/50 flex justify-between items-center font-mono text-xs">
+                    <span class="opacity-70">1 <span class="l-code">JPY</span> = </span>
+                    <div class="flex items-center space-x-2">
+                        <input type="number" id="rate-display" step="0.0001" onchange="manualRate(this.value)" class="bg-blue-800 text-right px-2 rounded w-24 outline-none border-none text-blue-200">
+                        <span class="h-code opacity-70 uppercase">HKD</span>
+                    </div>
+                </div>
+            </div>
         </header>
 
-        <main id="item-list" class="p-4 grid gap-5"></main>
+        <main id="item-list" class="p-6 grid gap-6"></main>
 
-        <div class="sticky-bottom p-6 rounded-t-[2.5rem]">
+        <div class="sticky-footer p-8 bg-white">
             <div id="progress-container" class="hidden mb-4">
-                <div class="flex justify-between text-[10px] font-bold text-purple-800 mb-1">
-                    <span id="process-status italic">正在智慧優化名稱...</span>
-                    <span id="progress-text">0%</span>
-                </div>
-                <div class="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
-                    <div id="loading-bar" class="h-full bg-purple-600 w-0 transition-all duration-300"></div>
+                <div class="w-full bg-slate-100 rounded-full h-1 overflow-hidden">
+                    <div id="loading-bar" class="h-full bg-purple-600 w-0 transition-all"></div>
                 </div>
             </div>
 
-            <div class="flex justify-between items-center mb-4">
+            <div class="flex justify-between items-center mb-6">
                 <div>
-                    <span class="text-[10px] font-black text-slate-400 uppercase tracking-tighter">Current Total</span>
-                    <div class="flex items-baseline space-x-2">
-                        <span class="text-3xl font-black text-slate-900">¥<span id="total-jpy">0</span></span>
-                        <span class="text-sm font-bold text-orange-500">≈ NT$ <span id="total-twd">0</span></span>
+                    <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Bill</span>
+                    <div class="flex items-baseline space-x-2 leading-none">
+                        <span class="text-3xl font-black text-slate-900"><span class="l-sym">¥</span><span id="total-local">0</span></span>
+                        <span class="text-sm font-bold text-orange-500">≈ <span class="h-sym">HK$</span><span id="total-home">0</span></span>
                     </div>
                 </div>
-                <button onclick="showCheckout()" class="bg-orange-500 text-white px-10 py-4 rounded-[1.5rem] font-black text-lg shadow-xl shadow-orange-200 active:scale-95 transition-all">
+                <button onclick="showCheckout()" class="bg-orange-500 text-white px-10 py-5 rounded-[1.8rem] font-black text-xl shadow-xl shadow-orange-100 active:scale-95 transition-all">
                     CHECKOUT
                 </button>
             </div>
             
-            <div class="flex justify-between items-center px-2">
+            <div class="flex justify-between items-center px-2 border-t pt-4">
                 <div class="flex items-center space-x-2">
-                    <input type="checkbox" id="svc-fee" onchange="toggleSvc()" class="w-4 h-4 rounded accent-purple-700">
-                    <label for="svc-fee" class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">+10% Service</label>
+                    <input type="checkbox" id="svc-fee" onchange="toggleSvc()" class="w-4 h-4 rounded accent-orange-500">
+                    <label for="svc-fee" class="text-[11px] font-bold text-slate-400 uppercase tracking-widest">+10% 加一服務費</label>
                 </div>
-                <button onclick="clearAll()" class="text-[10px] font-bold text-red-400 uppercase underline">Clear Menu</button>
+                <button onclick="clearAll()" class="text-[11px] font-bold text-red-400 uppercase tracking-widest underline">Clear All</button>
             </div>
         </div>
     </div>
 
-    <div id="checkout-modal" class="hidden fixed inset-0 bg-slate-900/90 z-[100] flex items-center justify-center p-6" onclick="closeCheckout()">
-        <div class="bg-white w-full max-w-sm rounded-[3rem] p-8 shadow-2xl" onclick="event.stopPropagation()">
-            <h2 class="text-2xl font-black text-slate-800 mb-6 border-b pb-4">訂單確認</h2>
-            <div id="checkout-list" class="space-y-4 mb-6 max-h-[50vh] overflow-y-auto pr-2"></div>
-            <div class="text-right border-t pt-4">
-                <p class="text-slate-400 text-xs font-bold">總金額 (JPY)</p>
-                <p class="text-4xl font-black text-orange-600 font-mono">¥<span id="checkout-total">0</span></p>
+    <div id="checkout-modal" class="hidden fixed inset-0 bg-slate-900/95 z-[100] flex items-center justify-center p-6" onclick="closeCheckout()">
+        <div class="bg-white w-full max-w-sm rounded-[3rem] p-10 shadow-2xl" onclick="event.stopPropagation()">
+            <h2 class="text-2xl font-black text-slate-800 mb-6 border-b pb-4">訂單明細</h2>
+            <div id="checkout-list" class="space-y-4 mb-6 max-h-[40vh] overflow-y-auto pr-2"></div>
+            <div class="text-right border-t pt-6">
+                <p class="text-slate-400 text-xs font-bold uppercase mb-1 tracking-widest">Final Total</p>
+                <p class="text-4xl font-black text-orange-600 italic"><span class="l-sym">¥</span><span id="checkout-total">0</span></p>
             </div>
-            <button onclick="closeCheckout()" class="w-full mt-8 bg-slate-900 text-white py-4 rounded-2xl font-bold active:scale-95 transition-all">返回修改</button>
+            <button onclick="closeCheckout()" class="w-full mt-10 bg-slate-900 text-white py-5 rounded-3xl font-black text-lg">返回修改</button>
         </div>
     </div>
 
     <script>
         let gun, room;
-        let state = { rate: 0.211, useSvc: false, items: [], currentCat: 'all' };
+        const symMap = { 'JPY':'¥', 'KRW':'₩', 'THB':'฿', 'EUR':'€', 'USD':'$', 'TWD':'NT$', 'HKD':'HK$', 'CNY':'¥' };
+        let state = { local: 'JPY', home: 'HKD', rate: 0.051, useSvc: false, items: [], currentCat: 'all' };
 
-        // --- 🔐 認證 ---
+        // 🔐 初始化
         function unlockApp() {
             const pwd = document.getElementById('pwd-input').value;
             if (!pwd) return;
-            const roomId = 'room-v12-final-' + btoa(pwd).substring(0, 10);
+            const roomId = 'room-hk-v10-' + btoa(pwd).substring(0, 10);
             gun = Gun(['https://gun-manhattan.herokuapp.com/gun']);
             room = gun.get(roomId);
             room.on(d => { if(d && d.c) { state = JSON.parse(d.c); render(false); } });
@@ -120,35 +143,34 @@
             unlockApp();
         }
 
-        function logout() { sessionStorage.removeItem('ml_last_pwd'); location.reload(); }
-
-        // --- 🌍 翻譯優化 ---
-        async function translate(text) {
-            // 內建簡單字典修正
-            const dict = { "豚": "豬肉", "鶏": "雞肉", "飲み放題": "暢飲", "放題": "吃到飽" };
-            let result = text;
+        async function fetchRate() {
             try {
-                const res = await fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=ja&tl=zh-TW&dt=t&q=${encodeURI(text)}`);
+                const res = await fetch(`https://open.er-api.com/v6/latest/${state.local}`);
                 const data = await res.json();
-                result = data[0][0][0];
-                // 應用字典微調
-                Object.keys(dict).forEach(key => { if(text.includes(key)) result = result.replace(new RegExp(key, 'g'), dict[key]); });
-                return result;
+                state.rate = data.rates[state.home].toFixed(5);
+                render(true);
+            } catch (e) { console.log("Rate error"); }
+        }
+
+        function updateCcy() {
+            state.local = document.getElementById('local-ccy').value;
+            state.home = document.getElementById('home-ccy').value;
+            fetchRate();
+        }
+
+        async function translate(text) {
+            try {
+                const res = await fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=zh-TW&dt=t&q=${encodeURI(text)}`);
+                const data = await res.json();
+                return data[0][0][0];
             } catch (e) { return text; }
         }
 
-        // --- 📸 OCR ---
         async function processImages(input) {
             if (!input.files || input.files.length === 0) return;
             document.getElementById('progress-container').classList.remove('hidden');
             const worker = await Tesseract.createWorker({
-                logger: m => {
-                    if (m.status === 'recognizing text') {
-                        const p = Math.floor(m.progress * 100);
-                        document.getElementById('loading-bar').style.width = p + '%';
-                        document.getElementById('progress-text').innerText = p + '%';
-                    }
-                }
+                logger: m => { if (m.status === 'recognizing text') document.getElementById('loading-bar').style.width = Math.floor(m.progress * 100) + '%'; }
             });
             await worker.loadLanguage('jpn+eng');
             await worker.initialize('jpn+eng');
@@ -160,17 +182,9 @@
                     if (m) {
                         const price = parseFloat(m[1].replace(/,/g, ''));
                         const raw = l.text.replace(m[0],'').trim();
-                        if (price > 50) {
+                        if (price > 10) {
                             const trans = await translate(raw);
-                            state.items.push({
-                                id: Date.now() + Math.random(),
-                                name: trans,
-                                raw: raw,
-                                price, qty: 1, picked: false,
-                                category: '主菜',
-                                desc: '可點擊名稱進行手動修改',
-                                tags: ['New!']
-                            });
+                            state.items.push({ id: Date.now()+Math.random(), name: trans, raw: raw, price, qty: 1, picked: false, category: '主菜', tags: ['New!'] });
                         }
                     }
                 }
@@ -180,101 +194,68 @@
             render(true);
         }
 
-        // --- 🎮 介面邏輯 ---
-        function filterCat(cat) {
-            state.currentCat = cat;
-            document.querySelectorAll('.category-btn').forEach(btn => {
-                const btnText = btn.innerText;
-                const match = (cat === 'all' && btnText === '全部') || (btnText.includes(cat));
-                btn.classList.toggle('active', match);
-            });
-            render(false);
-        }
-
-        // 🌟 新功能：手動編輯名稱
-        function editName(id, currentName) {
-            event.stopPropagation();
-            const newName = prompt("請輸入正確的品項名稱：", currentName);
-            if (newName && newName !== currentName) {
-                const item = state.items.find(x => x.id === id);
-                item.name = newName;
-                render(true);
-            }
-        }
-
-        function toggle(id) {
-            const i = state.items.find(x => x.id === id);
-            i.picked = !i.picked;
-            render(true);
-        }
-
-        function updQty(id, d) {
-            event.stopPropagation();
-            const i = state.items.find(x => x.id === id);
-            i.qty = Math.max(1, i.qty + d);
-            render(true);
-        }
-
         function render(isLocal = true) {
+            document.getElementById('local-ccy').value = state.local;
+            document.getElementById('home-ccy').value = state.home;
+            document.querySelectorAll('.l-code').forEach(el => el.innerText = state.local);
+            document.querySelectorAll('.h-code').forEach(el => el.innerText = state.home);
+            document.querySelectorAll('.l-sym').forEach(el => el.innerText = symMap[state.local]);
+            document.querySelectorAll('.h-sym').forEach(el => el.innerText = symMap[state.home]);
+            document.getElementById('rate-display').value = state.rate;
+            document.getElementById('svc-fee').checked = state.useSvc;
+
             const list = document.getElementById('item-list');
             const filtered = state.currentCat === 'all' ? state.items : state.items.filter(i => i.category === state.currentCat);
-
             list.innerHTML = filtered.map(item => `
-                <div class="food-card p-6 rounded-[2.5rem] ${item.picked ? 'shadow-xl -translate-y-1' : 'unpicked opacity-50 grayscale'}" onclick="toggle(${item.id})">
-                    <span class="edit-badge">Click Name to Edit</span>
+                <div class="food-card p-6 rounded-[2.5rem] relative ${item.picked ? 'shadow-xl' : 'unpicked'}" onclick="toggle(${item.id})">
+                    <span class="edit-hint">Tap Name to Edit</span>
                     <div class="flex justify-between items-start">
                         <div class="flex-1 pr-6">
                             <div class="flex items-center space-x-2 mb-2">
                                 <span class="bg-purple-900 text-white text-[8px] px-2 py-0.5 rounded-full font-black uppercase tracking-widest">${item.tags[0]}</span>
                             </div>
-                            <h3 class="text-xl font-black text-brown-900 leading-tight mb-1" onclick="editName(${item.id}, '${item.name}')">${item.name}</h3>
-                            <p class="text-[10px] text-slate-400 font-bold mb-3">ORIGINAL: ${item.raw}</p>
-                            <p class="text-xs text-slate-500 font-medium mb-4 leading-relaxed">${item.desc}</p>
+                            <h3 class="text-xl font-black text-slate-800 leading-tight mb-1" onclick="editName(${item.id}, '${item.name}')">${item.name}</h3>
+                            <p class="text-[10px] text-slate-400 font-bold mb-3 uppercase tracking-tighter">${item.raw}</p>
                             <div class="flex items-baseline space-x-2">
-                                <span class="text-2xl font-black text-brown-900">¥${item.price.toLocaleString()}</span>
-                                <span class="text-[10px] font-bold text-orange-600 uppercase">≈ NT$ ${Math.round(item.price * state.rate)}</span>
+                                <span class="text-2xl font-black text-slate-900">${symMap[state.local]}${item.price.toLocaleString()}</span>
+                                <span class="text-[10px] font-black text-orange-600 uppercase">≈ ${symMap[state.home]}${Math.round(item.price * state.rate)}</span>
                             </div>
                         </div>
                         <div class="flex flex-col items-center space-y-4" onclick="event.stopPropagation()">
-                            <button onclick="updQty(${item.id}, 1)" class="w-12 h-12 bg-white border-2 border-orange-100 rounded-2xl flex items-center justify-center text-orange-500 font-black text-2xl shadow-sm">+</button>
-                            <span class="text-lg font-black text-brown-900">${item.qty}</span>
-                            <button onclick="updQty(${item.id}, -1)" class="w-12 h-12 bg-white border-2 border-orange-100 rounded-2xl flex items-center justify-center text-orange-500 font-black text-2xl shadow-sm">-</button>
+                            <button onclick="updQty(${item.id}, 1)" class="w-10 h-10 bg-white border-2 border-orange-100 rounded-2xl flex items-center justify-center text-orange-500 font-black text-xl shadow-sm">+</button>
+                            <span class="text-lg font-black text-slate-800">${item.qty}</span>
+                            <button onclick="updQty(${item.id}, -1)" class="w-10 h-10 bg-white border-2 border-orange-100 rounded-2xl flex items-center justify-center text-orange-500 font-black text-xl shadow-sm">-</button>
                         </div>
                     </div>
                 </div>
             `).join('');
 
             const sel = state.items.filter(i => i.picked);
-            let jpy = sel.reduce((s, i) => s + (i.price * i.qty), 0);
-            if(state.useSvc) jpy *= 1.1;
-
-            document.getElementById('total-jpy').innerText = Math.round(jpy).toLocaleString();
-            document.getElementById('total-twd').innerText = Math.round(jpy * state.rate).toLocaleString();
+            let lSum = sel.reduce((s, i) => s + (i.price * i.qty), 0);
+            if(state.useSvc) lSum *= 1.1;
+            document.getElementById('total-local').innerText = Math.round(lSum).toLocaleString();
+            document.getElementById('total-home').innerText = Math.round(lSum * state.rate).toLocaleString();
             if (isLocal && room) room.put({ c: JSON.stringify(state) });
         }
 
+        function filterCat(cat) { state.currentCat = cat; render(false); }
+        function editName(id, current) { event.stopPropagation(); const n = prompt("修正品項名稱：", current); if(n) { state.items.find(x=>x.id===id).name = n; render(true); } }
+        function toggle(id) { const i = state.items.find(x => x.id === id); i.picked = !i.picked; render(true); }
+        function updQty(id, d) { event.stopPropagation(); const i = state.items.find(x => x.id === id); i.qty = Math.max(1, i.qty + d); render(true); }
+        function manualRate(v) { state.rate = parseFloat(v); render(true); }
+        function toggleSvc() { state.useSvc = document.getElementById('svc-fee').checked; render(true); }
+        function clearAll() { if(confirm("確定清空清單？")) { state.items = []; render(true); } }
         function showCheckout() {
             const sel = state.items.filter(i => i.picked);
-            if(sel.length === 0) return alert("請先挑選想吃的品項");
-            const checkoutList = document.getElementById('checkout-list');
-            checkoutList.innerHTML = sel.map(i => `
-                <div class="flex justify-between items-center bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                    <div>
-                        <p class="font-black text-slate-800 text-sm">${i.name}</p>
-                        <p class="text-[10px] text-slate-400 font-bold uppercase">¥${i.price.toLocaleString()} x ${i.qty}</p>
-                    </div>
-                    <p class="font-black text-slate-900">¥${(i.price * i.qty).toLocaleString()}</p>
-                </div>
-            `).join('');
+            if(sel.length === 0) return alert("尚未挑選品項");
+            document.getElementById('checkout-list').innerHTML = sel.map(i => `<div class="flex justify-between items-center bg-slate-50 p-4 rounded-2xl"><p class="font-black text-slate-800 text-sm">${i.name} x ${i.qty}</p><p class="font-black text-slate-900">${symMap[state.local]}${(i.price * i.qty).toLocaleString()}</p></div>`).join('');
             let total = sel.reduce((s, i) => s + (i.price * i.qty), 0);
             if(state.useSvc) total *= 1.1;
             document.getElementById('checkout-total').innerText = Math.round(total).toLocaleString();
             document.getElementById('checkout-modal').classList.remove('hidden');
         }
-
         function closeCheckout() { document.getElementById('checkout-modal').classList.add('hidden'); }
-        function toggleSvc() { state.useSvc = document.getElementById('svc-fee').checked; render(true); }
-        function clearAll() { if(confirm("確定重置清單？")) { state.items = []; render(true); } }
+        function logout() { sessionStorage.removeItem('ml_last_pwd'); location.reload(); }
     </script>
 </body>
 </html>
