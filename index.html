@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>MenuLens HK - 極速穩定版</title>
+    <title>MenuLens HK - 穩定極速版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/gun/gun.js"></script>
     <script src="https://unpkg.com/tesseract.js@5.0.3/dist/tesseract.min.js"></script>
     <style>
         :root { --main-bg: #FFFBEB; --accent-orange: #FB923C; --deep-purple: #581C87; --soft-brown: #78350F; }
         body { background-color: white; font-family: system-ui, -apple-system, sans-serif; -webkit-tap-highlight-color: transparent; }
-        .food-card { background-color: var(--main-bg); border: 2px solid var(--accent-orange); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative; }
+        .food-card { background-color: var(--main-bg); border: 2px solid var(--accent-orange); transition: all 0.3s; position: relative; }
         .food-card.unpicked { opacity: 0.5; filter: grayscale(1); transform: scale(0.97); border-color: #E2E8F0; }
         .sticky-footer { position: fixed; bottom: 0; left: 0; right: 0; background: white; box-shadow: 0 -10px 30px rgba(0,0,0,0.08); z-index: 50; border-radius: 2.5rem 2.5rem 0 0; }
         .category-btn.active { background-color: var(--deep-purple); color: white; border-color: var(--deep-purple); }
@@ -25,7 +25,7 @@
     <div id="auth-screen" class="fixed inset-0 bg-slate-900 z-[200] flex items-center justify-center p-6 text-white text-center">
         <div class="bg-white p-10 rounded-[3rem] w-full max-w-sm shadow-2xl">
             <div class="text-5xl mb-4">🍱</div>
-            <h2 class="text-2xl font-black text-slate-800 mb-6 font-serif uppercase tracking-widest">MenuLens HK</h2>
+            <h2 class="text-2xl font-black text-slate-800 mb-6 uppercase tracking-widest">MenuLens HK</h2>
             <input type="password" id="pwd-input" pattern="\d*" inputmode="numeric" placeholder="••••" 
                    class="w-full bg-slate-100 rounded-3xl p-5 text-center font-black text-3xl mb-6 text-slate-800 outline-none border-4 border-transparent focus:border-orange-400">
             <button onclick="unlockApp()" class="w-full bg-orange-500 text-white py-5 rounded-3xl font-black text-xl shadow-xl active:scale-95 transition-all">解鎖系統</button>
@@ -39,27 +39,27 @@
                 <div class="flex items-center space-x-3">
                     <button onclick="logout()" class="text-xs font-bold text-slate-400 underline">登出</button>
                     <label for="camera-direct" class="bg-purple-900 text-white p-3 rounded-2xl cursor-pointer shadow-lg active:scale-90 transition-transform">
-                        <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path></svg>
+                        <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path></svg>
                     </label>
                     <input type="file" id="camera-direct" accept="image/*" capture="environment" onchange="processImages(this)" class="hidden">
                     <label for="album-selection" class="bg-slate-800 text-white p-3 rounded-2xl cursor-pointer shadow-lg active:scale-90 transition-transform">
-                        <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                        <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                     </label>
                     <input type="file" id="album-selection" accept="image/*" multiple onchange="processImages(this)" class="hidden">
                 </div>
             </div>
 
-            <div class="flex space-x-2 overflow-x-auto no-scrollbar mb-4" id="cat-nav">
-                <button onclick="filterCat('all')" class="category-btn active px-6 py-2 rounded-full text-xs font-black border-2 border-slate-100 whitespace-nowrap transition-all">全部</button>
-                <button onclick="filterCat('主菜')" class="category-btn px-6 py-2 rounded-full text-xs font-black border-2 border-slate-100 whitespace-nowrap transition-all">主菜</button>
-                <button onclick="filterCat('配菜')" class="category-btn px-6 py-2 rounded-full text-xs font-black border-2 border-slate-100 whitespace-nowrap transition-all">配菜</button>
-                <button onclick="filterCat('飲料')" class="category-btn px-6 py-2 rounded-full text-xs font-black border-2 border-slate-100 whitespace-nowrap transition-all">飲料</button>
+            <div class="flex space-x-2 overflow-x-auto no-scrollbar mb-4">
+                <button onclick="filterCat('all')" class="category-btn active px-6 py-2 rounded-full text-xs font-black border-2 border-slate-100 whitespace-nowrap">全部</button>
+                <button onclick="filterCat('主菜')" class="category-btn px-6 py-2 rounded-full text-xs font-black border-2 border-slate-100 whitespace-nowrap">主菜</button>
+                <button onclick="filterCat('配菜')" class="category-btn px-6 py-2 rounded-full text-xs font-black border-2 border-slate-100 whitespace-nowrap">配菜</button>
+                <button onclick="filterCat('飲料')" class="category-btn px-6 py-2 rounded-full text-xs font-black border-2 border-slate-100 whitespace-nowrap">飲料</button>
             </div>
 
             <div class="bg-blue-600 p-4 rounded-[2rem] text-white shadow-lg space-y-3">
                 <div class="flex justify-between items-center text-[10px] font-black opacity-60">
-                    <span>MENU CURRENCY</span>
-                    <span>HOME CURRENCY</span>
+                    <span>當地貨幣 (MENU)</span>
+                    <span>家鄉貨幣 (HOME)</span>
                 </div>
                 <div class="flex justify-between items-center">
                     <select id="local-ccy" onchange="updateCurrency()" class="bg-blue-700 text-white font-bold p-2 rounded-xl outline-none">
@@ -68,7 +68,7 @@
                         <option value="EUR">🇪🇺 EUR</option>
                         <option value="THB">🇹🇭 THB</option>
                     </select>
-                    <span class="text-xl opacity-50">➜</span>
+                    <span class="text-xl opacity-50 font-serif">➜</span>
                     <select id="home-ccy" onchange="updateCurrency()" class="bg-blue-700 text-white font-bold p-2 rounded-xl outline-none text-right">
                         <option value="HKD">🇭🇰 HKD</option>
                         <option value="TWD">🇹🇼 TWD</option>
@@ -88,7 +88,7 @@
         <div class="sticky-footer p-8 bg-white">
             <div id="progress-container" class="hidden mb-4">
                 <div class="flex justify-between text-[10px] font-black text-purple-700 mb-1">
-                    <span id="p-status" class="processing-glow uppercase tracking-widest italic">⚡ Parallel OCR Hub...</span>
+                    <span id="p-status" class="processing-glow uppercase">正在極速辨識中...</span>
                     <span id="p-count">0/0</span>
                 </div>
                 <div class="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
@@ -98,7 +98,7 @@
 
             <div class="flex justify-between items-center mb-6">
                 <div>
-                    <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Bill</span>
+                    <span class="text-[10px] font-black text-slate-400 uppercase">Selected Bill</span>
                     <div class="flex items-baseline space-x-2 leading-none">
                         <span class="text-3xl font-black text-slate-900"><span class="sym-local">¥</span><span id="total-local">0</span></span>
                         <span class="text-sm font-bold text-orange-500">≈ <span class="sym-home">HK$</span><span id="total-home">0</span></span>
@@ -110,7 +110,7 @@
             <div class="flex justify-between items-center px-2 border-t pt-4">
                 <label class="flex items-center space-x-2 text-[11px] font-bold text-slate-400">
                     <input type="checkbox" id="svc-fee" onchange="toggleSvc()" class="accent-orange-500 w-4 h-4">
-                    <span>+10% 加一服務費</span>
+                    <span>+10% 服務費 (加一)</span>
                 </label>
                 <button onclick="clearAll()" class="text-[11px] font-bold text-red-400 underline uppercase tracking-tighter">Clear All</button>
             </div>
@@ -119,10 +119,10 @@
 
     <div id="checkout-modal" class="hidden fixed inset-0 bg-slate-900/95 z-[100] flex items-center justify-center p-6" onclick="closeCheckout()">
         <div class="bg-white w-full max-w-sm rounded-[3rem] p-10 shadow-2xl" onclick="event.stopPropagation()">
-            <h2 class="text-2xl font-black text-slate-800 mb-6 border-b pb-4">訂單明細</h2>
+            <h2 class="text-2xl font-black text-slate-800 mb-6 border-b pb-4">訂單明細彙總</h2>
             <div id="checkout-list" class="space-y-4 mb-6 max-h-[40vh] overflow-y-auto pr-2"></div>
             <div class="text-right border-t pt-6">
-                <p class="text-slate-400 text-[10px] font-bold uppercase mb-1">Final Amount</p>
+                <p class="text-slate-400 text-[10px] font-bold uppercase mb-1">Final Amount (Incl. Svc)</p>
                 <p class="text-4xl font-black text-orange-600 italic"><span class="sym-local">¥</span><span id="checkout-total">0</span></p>
             </div>
             <button onclick="closeCheckout()" class="w-full mt-10 bg-slate-900 text-white py-5 rounded-3xl font-black text-lg">返回修改</button>
@@ -130,32 +130,27 @@
     </div>
 
     <script>
-        let gun, room, scheduler;
+        let gun, room, worker;
         const symMap = { 'JPY':'¥', 'KRW':'₩', 'THB':'฿', 'EUR':'€', 'USD':'$', 'TWD':'NT$', 'HKD':'HK$', 'CNY':'¥' };
         let state = { local: 'JPY', home: 'HKD', rate: 0.051, useSvc: false, items: [], currentCat: 'all' };
 
-        // ⚡ 極速並行引擎初始化 (核心優化)
-        async function initOCRHub() {
-            if (scheduler) return;
-            scheduler = Tesseract.createScheduler();
-            const workerNum = navigator.hardwareConcurrency || 2; // 根據手機核心數開啟並行工人
-            
-            for(let i=0; i<Math.min(workerNum, 2); i++) { // 手機端建議限制 2 個工人，避免過熱
-                const w = await Tesseract.createWorker({
-                    cacheMethod: 'write', // 啟用本地持久化緩存
-                    logger: m => { if (m.status === 'recognizing text') updateProgress(m.progress); }
-                });
-                await w.loadLanguage('jpn+eng');
-                await w.initialize('jpn+eng');
-                await w.setParameters({
-                    tessedit_char_whitelist: '0123456789.,¥$ぁあぃいぅうぇえぉおかがきぎくぐけげこごさざしじすずせぜそぞただちぢっつづてでとどなにぬねのはばぱひびぴふぶぷへべぺほぼぽまみむめもゃやゅゆょよらりるれろゎわゐゑをんァアィイゥウェエォオカGA一-龠ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
-                });
-                scheduler.addWorker(w);
-            }
+        // 🌟 穩定版 OCR 初始化
+        async function getWorker() {
+            if (worker) return worker;
+            worker = await Tesseract.createWorker({
+                corePath: 'https://unpkg.com/tesseract.js-core@v5.0.0/tesseract-core.wasm.js',
+                logger: m => { if (m.status === 'recognizing text') updateProgress(m.progress); }
+            });
+            await worker.loadLanguage('jpn+eng');
+            await worker.initialize('jpn+eng');
+            await worker.setParameters({
+                tessedit_char_whitelist: '0123456789.,¥$ぁあぃいぅうぇえぉおかがきぎくぐけげこごさざしじすずせぜそぞただちぢっつづてでとどなにぬねのはばぱひびぴふぶぷへべぺほぼぽまみむめもゃやゅゆょよらりるれろゎわゐゑをんァアィイゥウェエォオカGA一-龠ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
+            });
+            return worker;
         }
 
-        // 🎨 圖片預處理：二值化與銳化 (提速關鍵)
-        function preprocessImage(file) {
+        // ⚡ 圖片極速預處理 (二值化 & 銳化)
+        function preprocess(file) {
             return new Promise((resolve) => {
                 const reader = new FileReader();
                 reader.onload = (e) => {
@@ -164,14 +159,16 @@
                         const canvas = document.createElement('canvas');
                         const maxSide = 1200; 
                         let w = img.width, h = img.height;
-                        if (w > h && w > maxSide) { h *= maxSide / w; w = maxSide; }
-                        else if (h > maxSide) { w *= maxSide / h; h = maxSide; }
+                        if (w > maxSide || h > maxSide) {
+                            const ratio = Math.min(maxSide/w, maxSide/h);
+                            w *= ratio; h *= ratio;
+                        }
                         canvas.width = w; canvas.height = h;
                         const ctx = canvas.getContext('2d');
-                        // 1. 轉灰階
-                        ctx.filter = 'grayscale(100%) contrast(150%) brightness(110%)';
+                        // 關鍵：將圖片轉為黑白高對比
+                        ctx.filter = 'grayscale(100%) contrast(200%) brightness(120%)';
                         ctx.drawImage(img, 0, 0, w, h);
-                        resolve(canvas.toDataURL('image/jpeg', 0.7));
+                        resolve(canvas.toDataURL('image/jpeg', 0.8));
                     };
                     img.src = e.target.result;
                 };
@@ -184,54 +181,56 @@
             const pContainer = document.getElementById('progress-container');
             const pStatus = document.getElementById('p-status');
             const pCount = document.getElementById('p-count');
+            
             pContainer.classList.remove('hidden');
-            pStatus.innerText = "⚡ 加速引擎準備中...";
-
-            await initOCRHub();
-
-            const files = Array.from(input.files);
-            const jobs = files.map(async (file, i) => {
-                pStatus.innerText = "優化圖片畫質...";
-                const data = await preprocessImage(file);
-                pStatus.innerText = `並行辨識中...`;
-                pCount.innerText = `${i+1}/${files.length}`;
+            pStatus.innerText = "正在準備引擎...";
+            
+            try {
+                const activeWorker = await getWorker();
+                const files = Array.from(input.files);
                 
-                const { data: { lines } } = await scheduler.addJob('recognize', data);
-                for (let l of lines) {
-                    const m = l.text.match(/(\d{1,3}(?:,\d{3})*(?:\.\d+)?)/);
-                    if (m) {
-                        const price = parseFloat(m[1].replace(/,/g, ''));
-                        const raw = l.text.replace(m[0],'').trim();
-                        if (price > 10 && raw.length > 1) {
-                            const trans = await translate(raw);
-                            state.items.push({ 
-                                id: Date.now() + Math.random(), name: trans, raw: raw, price, qty: 1, picked: false,
-                                category: raw.includes('飲') ? '飲料' : '主菜',
-                                tags: raw.includes('Rare') ? ['RARE DOG!'] : (raw.includes('Allergen') ? ['Allergen'] : [])
-                            });
+                for (let i = 0; i < files.length; i++) {
+                    pStatus.innerText = `正在分析圖片 (${i+1}/${files.length})...`;
+                    pCount.innerText = `${i+1}/${files.length}`;
+                    
+                    const processedData = await preprocess(files[i]);
+                    const { data: { lines } } = await activeWorker.recognize(processedData);
+                    
+                    for (let l of lines) {
+                        const m = l.text.match(/(\d{1,3}(?:,\d{3})*(?:\.\d+)?)/);
+                        if (m) {
+                            const price = parseFloat(m[1].replace(/,/g, ''));
+                            const raw = l.text.replace(m[0],'').trim();
+                            if (price > 10 && raw.length > 1) {
+                                const trans = await translate(raw);
+                                state.items.push({ 
+                                    id: Date.now() + Math.random(), name: trans, raw: raw, price, qty: 1, picked: false,
+                                    category: raw.includes('飲') ? '飲料' : '主菜',
+                                    tags: raw.includes('Rare') ? ['RARE DOG!'] : (raw.includes('Allergen') ? ['Allergen'] : [])
+                                });
+                            }
                         }
                     }
+                    render(true);
                 }
-                render(true);
-            });
-
-            await Promise.all(jobs);
+            } catch (err) {
+                alert("辨識發生錯誤，請重新整理頁面。");
+            }
             pContainer.classList.add('hidden');
             input.value = ""; 
         }
 
-        // --- 其餘邏輯保持不變 ---
         function unlockApp() {
             const pwd = document.getElementById('pwd-input').value;
             if (!pwd) return;
-            const roomId = 'room-hk-parallel-v1-' + btoa(pwd).substring(0, 8);
+            const roomId = 'room-hk-final-stable-v10-' + btoa(pwd).substring(0, 8);
             gun = Gun(['https://gun-manhattan.herokuapp.com/gun']);
             room = gun.get(roomId);
             room.on(d => { if(d && d.c) { state = JSON.parse(d.c); render(false); } });
             document.getElementById('auth-screen').classList.add('hidden');
             document.getElementById('app-body').classList.remove('hidden');
             sessionStorage.setItem('ml_last_pwd', pwd);
-            initOCRHub(); 
+            getWorker(); // 預熱引擎
         }
 
         async function updateCurrency() {
@@ -261,8 +260,11 @@
             document.querySelectorAll('.sym-home').forEach(el => el.innerText = symMap[state.home]);
             const list = document.getElementById('item-list');
             const filtered = state.currentCat === 'all' ? state.items : state.items.filter(i => i.category === state.currentCat);
-            list.innerHTML = filtered.map(item => `
+            
+            list.innerHTML = filtered.length === 0 ? `<div class="text-center py-20 text-slate-300 font-bold italic">清單空白，請拍照加入</div>` : 
+                filtered.map(item => `
                 <div class="food-card p-6 rounded-[2.5rem] ${item.picked ? 'shadow-xl' : 'unpicked opacity-50 grayscale'}" onclick="toggle(${item.id})">
+                    <span class="edit-hint text-[8px] absolute top-4 right-4">Tap to Edit</span>
                     <div class="flex justify-between items-start">
                         <div class="flex-1 pr-6">
                             <div class="flex flex-wrap gap-1 mb-2">
@@ -271,7 +273,7 @@
                             <h3 class="text-xl font-black text-slate-800 leading-tight mb-1" onclick="editName(${item.id}, '${item.name}')">${item.name}</h3>
                             <p class="text-[10px] text-slate-400 font-bold mb-1">原文：${item.raw}</p>
                             <div class="flex items-baseline space-x-2 leading-none mt-4">
-                                <span class="text-2xl font-black text-slate-900">${symMap[state.local]}${item.price.toLocaleString()}</span>
+                                <span class="text-2xl font-black text-slate-900 italic">${symMap[state.local]}${item.price.toLocaleString()}</span>
                                 <span class="text-[10px] font-black text-orange-600 uppercase">≈ ${symMap[state.home]}${Math.round(item.price * state.rate)}</span>
                             </div>
                         </div>
