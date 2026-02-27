@@ -91,9 +91,47 @@
         // ==========================================
         // 🚨 重要：請填入你的 Cloudflare Worker 網址
       // ==========================================
+// --- 請精確檢查這一段 ---
 const WORKER_URL = "https://small-cell-2eaf.monetcheung1202.workers.dev"; 
-// ==========================================
-        // ==========================================
+
+async function processImage(input) {
+    if (!input.files || !input.files[0]) return;
+    const loader = document.getElementById('loading-bar');
+    loader.classList.remove('hidden');
+
+    const reader = new FileReader();
+    reader.readAsDataURL(input.files[0]);
+    reader.onload = async () => {
+        try {
+            const response = await fetch(WORKER_URL, {
+                method: "POST",
+                mode: "cors", // 確保開啟 CORS 模式
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    contents: [{ parts: [
+                        { text: "請辨識菜單並輸出繁體中文 JSON..." }, // 這裡使用剛才給你的強化指令
+                        { inline_data: { mime_type: "image/jpeg", data: reader.result.split(',')[1] } }
+                    ] }]
+                })
+            });
+
+            if (!response.ok) {
+                // 如果連線成功但伺服器報錯
+                throw new Error(`伺服器回應錯誤 (${response.status})`);
+            }
+
+            const result = await response.json();
+            // ... 後續處理邏輯 ...
+
+        } catch (err) {
+            // 💡 這裡會告訴你為什麼 Failed to fetch
+            console.error(err);
+            alert(`連線失敗原因：\n1. 請檢查 Worker 網址是否正確\n2. 檢查 Cloudflare Worker 是否已 Deploy\n3. 具體錯誤：${err.message}`);
+        } finally {
+            loader.classList.add('hidden');
+        }
+    };
+}
 
         let state = { 
             items: [], 
