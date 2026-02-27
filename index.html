@@ -160,7 +160,7 @@
             });
         }
 
-        // 🌟 核心：高穩定性辨識邏輯
+        // 🌟 核心：高穩定性辨識邏輯 (已修正 Tesseract v5 語法)
         async function processImages(input) {
             if (!input.files || input.files.length === 0) return;
             const pContainer = document.getElementById('progress-container');
@@ -168,12 +168,11 @@
             const pCount = document.getElementById('p-count');
             pContainer.classList.remove('hidden');
             
-            log("步驟 1: 建立 Worker...");
+            log("步驟 1: 建立 Worker 並載入語言...");
             try {
-                // 如果已經有 Worker 先關閉，確保乾淨啟動
                 if (worker) { await worker.terminate(); worker = null; }
                 
-                worker = await Tesseract.createWorker({
+                worker = await Tesseract.createWorker('jpn+eng', 1, {
                     logger: m => {
                         if (m.status === 'recognizing text') {
                             document.getElementById('loading-bar').style.width = Math.floor(m.progress * 100) + '%';
@@ -181,9 +180,7 @@
                     }
                 });
 
-                log("步驟 2: 載入語言包...");
-                await worker.loadLanguage('jpn+eng');
-                await worker.initialize('jpn+eng');
+                log("步驟 2: 設定白名單參數...");
                 await worker.setParameters({
                     tessedit_char_whitelist: '0123456789.,¥$ぁあぃいぅうぇえぉおかがきぎくぐけげこごさざしじすずせぜそぞただちぢっつづてでとどなにぬねのはばぱひびぴふぶぷへべぺほぼぽまみむめもゃやゅゆょよらりるれろゎわゐゑをんァアィイゥウェエォオカGA一-龠ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
                 });
@@ -224,12 +221,13 @@
             input.value = ""; 
         }
 
-        // --- 其餘功能模組保持不變 ---
+        // 🔗 初始化 App 與更換 Gun Relay Server
         function unlockApp() {
             const pwd = document.getElementById('pwd-input').value;
             if (!pwd) return;
             const roomId = 'room-hk-v11-stable-' + btoa(pwd).substring(0, 8);
-            gun = Gun(['https://gun-manhattan.herokuapp.com/gun']);
+            // 替換掉死掉的 Heroku 節點，改用穩定的 Iris 節點
+            gun = Gun(['https://gun-rs.iris.to/gun']);
             room = gun.get(roomId);
             room.on(d => { if(d && d.c) { state = JSON.parse(d.c); render(false); } });
             document.getElementById('auth-screen').classList.add('hidden');
@@ -248,12 +246,18 @@
             render(true);
         }
 
+        // 🌐 修正：加上 CORS 代理伺服器
         async function translate(text) {
             try {
-                const res = await fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=zh-TW&dt=t&q=${encodeURI(text)}`);
+                const targetUrl = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=zh-TW&dt=t&q=${encodeURIComponent(text)}`;
+                const res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`);
                 const data = await res.json();
-                return data[0][0][0];
-            } catch (e) { return text; }
+                const parsedData = JSON.parse(data.contents);
+                return parsedData[0][0][0];
+            } catch (e) {
+                console.error("翻譯失敗:", e);
+                return text;
+            }
         }
 
         function render(isLocal = true) {
@@ -270,7 +274,7 @@
                             <div class="flex flex-wrap gap-1 mb-2">
                                 ${item.tags.map(tag => `<span class="bg-purple-900 text-white text-[8px] px-2 py-0.5 rounded-full font-black uppercase">${tag}</span>`).join('')}
                             </div>
-                            <h3 class="text-xl font-black text-slate-800 mb-1 leading-tight" onclick="editName(${item.id}, '${item.name}')">${item.name}</h3>
+                            <h3 class="text-xl font-black text-slate-800 mb-1 leading-tight" onclick="editName(${item.id})">${item.name}</h3>
                             <p class="text-[10px] text-slate-400 font-bold mb-3 uppercase line-clamp-1">${item.raw}</p>
                             <div class="flex items-baseline space-x-2 leading-none">
                                 <span class="text-2xl font-black text-slate-900 italic">${symMap[state.local]}${item.price.toLocaleString()}</span>
@@ -294,7 +298,15 @@
 
         function toggle(id) { const i = state.items.find(x => x.id === id); i.picked = !i.picked; render(true); }
         function updQty(id, d) { event.stopPropagation(); const i = state.items.find(x => x.id === id); i.qty = Math.max(1, i.qty + d); render(true); }
-        function editName(id, current) { event.stopPropagation(); const n = prompt("修正名稱：", current); if(n) { state.items.find(x=>x.id===id).name = n; render(true); } }
+        
+        // ✏️ 修正了原本的 editName 函數，避免單引號字串造成的 HTML 解析錯誤
+        function editName(id) { 
+            event.stopPropagation(); 
+            const item = state.items.find(x => x.id === id);
+            const n = prompt("修正名稱：", item.name); 
+            if(n) { item.name = n; render(true); } 
+        }
+
         function toggleSvc() { state.useSvc = document.getElementById('svc-fee').checked; render(true); }
         function manualRate(v) { state.rate = parseFloat(v); render(true); }
         function filterCat(cat) { state.currentCat = cat; render(false); }
