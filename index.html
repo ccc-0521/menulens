@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>MenuLens HK - 極速辨識版</title>
+    <title>MenuLens HK - 終極點餐機</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/gun/gun.js"></script>
@@ -16,9 +16,9 @@
         .category-btn.active { background-color: var(--deep-purple); color: white; border-color: var(--deep-purple); }
         .sticky-footer { position: fixed; bottom: 0; left: 0; right: 0; background: white; box-shadow: 0 -10px 30px rgba(0,0,0,0.1); z-index: 50; border-radius: 2.5rem 2.5rem 0 0; }
         .edit-hint { position: absolute; top: 12px; right: 12px; font-size: 8px; color: var(--accent-orange); font-weight: bold; text-transform: uppercase; }
-        /* 閃爍動畫表示正在處理 */
         .processing-glow { animation: glow 1.5s infinite; }
         @keyframes glow { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+        ::-webkit-scrollbar { display: none; }
     </style>
 </head>
 <body class="pb-80">
@@ -28,7 +28,7 @@
             <h2 class="text-2xl font-black text-slate-800 mb-6 font-serif tracking-widest">MenuLens HK</h2>
             <input type="number" id="pwd-input" pattern="\d*" inputmode="numeric" placeholder="房間密碼" 
                    class="w-full bg-slate-100 rounded-3xl p-5 text-center font-black text-3xl mb-6 text-slate-800 tracking-widest outline-none border-4 border-transparent focus:border-orange-400">
-            <button onclick="unlockApp()" class="w-full bg-orange-500 text-white py-5 rounded-3xl font-black text-xl shadow-xl active:scale-95 transition-all">進入並加速</button>
+            <button onclick="unlockApp()" class="w-full bg-orange-500 text-white py-5 rounded-3xl font-black text-xl shadow-xl active:scale-95 transition-all">進入房間</button>
         </div>
     </div>
 
@@ -38,6 +38,7 @@
                 <h1 class="text-3xl font-black text-slate-800 tracking-tighter italic">Menu<span class="text-orange-500">Lens</span></h1>
                 <div class="flex items-center space-x-3">
                     <button onclick="logout()" class="text-xs font-bold text-slate-400 underline">登出</button>
+                    
                     <label for="camera-direct" class="bg-purple-900 text-white p-3 rounded-2xl cursor-pointer shadow-lg active:scale-90 transition-transform">
                         <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path></svg>
                     </label>
@@ -50,10 +51,10 @@
                 </div>
             </div>
 
-            <div class="flex space-x-2 overflow-x-auto no-scrollbar mb-4" id="cat-nav">
-                <button onclick="filterCat('all')" class="category-btn active px-6 py-2 rounded-full text-xs font-black border-2 border-slate-100 whitespace-nowrap">全部</button>
-                <button onclick="filterCat('主菜')" class="category-btn px-6 py-2 rounded-full text-xs font-black border-2 border-slate-100 whitespace-nowrap">主菜</button>
-                <button onclick="filterCat('飲料')" class="category-btn px-6 py-2 rounded-full text-xs font-black border-2 border-slate-100 whitespace-nowrap">飲料</button>
+            <div class="flex space-x-2 overflow-x-auto no-scrollbar mb-4">
+                <button onclick="filterCat('all')" class="category-btn active px-6 py-2 rounded-full text-xs font-black border-2 border-slate-100 whitespace-nowrap transition-all">全部</button>
+                <button onclick="filterCat('主菜')" class="category-btn px-6 py-2 rounded-full text-xs font-black border-2 border-slate-100 whitespace-nowrap transition-all">主食</button>
+                <button onclick="filterCat('飲料')" class="category-btn px-6 py-2 rounded-full text-xs font-black border-2 border-slate-100 whitespace-nowrap transition-all">飲料</button>
             </div>
 
             <div class="bg-blue-600 p-4 rounded-[2rem] text-white shadow-lg space-y-3">
@@ -70,7 +71,7 @@
                     </select>
                 </div>
                 <div class="pt-2 border-t border-blue-500/50 flex justify-between items-center font-mono text-xs">
-                    <span>1 <span class="l-code">JPY</span> = </span>
+                    <span class="opacity-70">1 <span class="l-code">JPY</span> = </span>
                     <div class="flex items-center space-x-2">
                         <input type="number" id="rate-display" step="0.0001" onchange="manualRate(this.value)" class="bg-blue-800 text-right px-2 rounded w-24 outline-none border-none text-blue-200">
                         <span class="h-code opacity-70 font-bold uppercase">HKD</span>
@@ -84,7 +85,7 @@
         <div class="sticky-footer p-8 bg-white">
             <div id="progress-container" class="hidden mb-4">
                 <div class="flex justify-between text-[10px] font-black text-purple-700 mb-1 uppercase tracking-tighter">
-                    <span id="p-status" class="processing-glow">⚡ 極速引擎運行中...</span>
+                    <span id="p-status" class="processing-glow">⚡ 極速辨識引擎運行中...</span>
                     <span id="p-count">0/0</span>
                 </div>
                 <div class="w-full bg-slate-100 rounded-full h-1 overflow-hidden">
@@ -117,13 +118,13 @@
 
     <div id="checkout-modal" class="hidden fixed inset-0 bg-slate-900/95 z-[100] flex items-center justify-center p-6" onclick="closeCheckout()">
         <div class="bg-white w-full max-w-sm rounded-[3rem] p-10 shadow-2xl" onclick="event.stopPropagation()">
-            <h2 class="text-2xl font-black text-slate-800 mb-6 border-b pb-4">訂單明細</h2>
-            <div id="checkout-list" class="space-y-4 mb-6 max-h-[40vh] overflow-y-auto"></div>
+            <h2 class="text-2xl font-black text-slate-800 mb-6 border-b pb-4">訂單確認彙總</h2>
+            <div id="checkout-list" class="space-y-4 mb-6 max-h-[40vh] overflow-y-auto pr-2"></div>
             <div class="text-right border-t pt-6">
                 <p class="text-slate-400 text-xs font-bold uppercase mb-1">Final Amount</p>
                 <p class="text-4xl font-black text-orange-600 italic"><span class="l-sym">¥</span><span id="checkout-total">0</span></p>
             </div>
-            <button onclick="closeCheckout()" class="w-full mt-10 bg-slate-900 text-white py-5 rounded-3xl font-black text-lg">返回</button>
+            <button onclick="closeCheckout()" class="w-full mt-10 bg-slate-900 text-white py-5 rounded-3xl font-black text-lg">返回修改</button>
         </div>
     </div>
 
@@ -132,31 +133,30 @@
         const symMap = { 'JPY':'¥', 'KRW':'₩', 'EUR':'€', 'HKD':'HK$', 'TWD':'NT$' };
         let state = { local: 'JPY', home: 'HKD', rate: 0.051, useSvc: false, items: [], currentCat: 'all' };
 
-        // 🌟 初始化極速 OCR 引擎 (常駐背景)
-        async function initFastWorker() {
+        // 🌟 初始化極速 OCR 引擎
+        async function initOCR() {
             if (worker) return;
             worker = await Tesseract.createWorker({
                 logger: m => { if (m.status === 'recognizing text') updateProgress(m.progress); }
             });
             await worker.loadLanguage('jpn+eng');
             await worker.initialize('jpn+eng');
-            // 💡 效能關鍵：設定白名單，只辨識價格與常用字符，極大提升速度
             await worker.setParameters({
-                tessedit_char_whitelist: '0123456789.,¥$ぁあぃいぅうぇえぉおかがきぎくぐけげこごさざしじすずせぜそぞただちぢっつづてでとどなにぬねのはばぱひびぴふぶぷへべぺほぼぽまみむめもゃやゅゆょよらりるれろゎわゐゑをんァアィイゥウェエォオカガキギクグケGEKO'
+                tessedit_char_whitelist: '0123456789.,¥$ぁあぃいぅうぇえぉおかがきぎくぐけげこごさざしじすずせぜそぞただちぢっつづてでとどなにぬねのはばぱひびぴふぶぷへべぺほぼぽまみむめもゃやゅゆょよらりるれろゎわゐゑをんァアィイゥウェエォオカGA'
             });
         }
 
         function unlockApp() {
             const pwd = document.getElementById('pwd-input').value;
             if (!pwd) return;
-            const roomId = 'room-hk-fast-v1-' + btoa(pwd).substring(0, 10);
+            const roomId = 'room-hk-final-append-v1-' + btoa(pwd).substring(0, 10);
             gun = Gun(['https://gun-manhattan.herokuapp.com/gun']);
             room = gun.get(roomId);
             room.on(d => { if(d && d.c) { state = JSON.parse(d.c); render(false); } });
             document.getElementById('auth-screen').classList.add('hidden');
             document.getElementById('app-body').classList.remove('hidden');
             sessionStorage.setItem('ml_last_pwd', pwd);
-            initFastWorker(); // 登入後立即啟動引擎
+            initOCR();
         }
 
         if(sessionStorage.getItem('ml_last_pwd')) {
@@ -172,17 +172,24 @@
             } catch (e) { return text; }
         }
 
+        // --- 📸 關鍵修正：真正的多圖累加與分開選擇 ---
         async function processImages(input) {
             if (!input.files || input.files.length === 0) return;
-            await initFastWorker(); // 確保引擎已就緒
+            await initOCR();
             
             const pContainer = document.getElementById('progress-container');
+            const lBar = document.getElementById('loading-bar');
+            const pStatus = document.getElementById('p-status');
             const pCount = document.getElementById('p-count');
-            pContainer.classList.remove('hidden');
             
+            pContainer.classList.remove('hidden');
             const files = Array.from(input.files);
+
             for (let i = 0; i < files.length; i++) {
+                pStatus.innerText = `正在辨識照片...`;
                 pCount.innerText = `${i+1} / ${files.length}`;
+                lBar.style.width = '0%';
+
                 const { data: { lines } } = await worker.recognize(files[i]);
                 
                 for (let l of lines) {
@@ -192,18 +199,20 @@
                         const raw = l.text.replace(m[0],'').trim();
                         if (price > 10) {
                             const trans = await translate(raw);
+                            // 🌟 核心：直接 PUSH 追加到現有陣列
                             state.items.push({ 
                                 id: Date.now() + Math.random(), 
                                 name: trans, raw: raw, price, qty: 1, picked: false, 
-                                category: raw.includes('飲') ? '飲料' : '主菜'
+                                category: raw.includes('飲') ? '飲料' : '主菜',
+                                tags: ['New!']
                             });
                         }
                     }
                 }
-                render(true);
+                render(true); // 處理完一張立即同步並顯示
             }
             pContainer.classList.add('hidden');
-            input.value = ""; 
+            input.value = ""; // 清空 input 確保下次選擇相同檔案也能觸發辨識
         }
 
         function updateProgress(p) {
@@ -222,15 +231,16 @@
             const list = document.getElementById('item-list');
             const filtered = state.currentCat === 'all' ? state.items : state.items.filter(i => i.category === state.currentCat);
             
-            list.innerHTML = filtered.map(item => `
-                <div class="food-card p-6 rounded-[2.5rem] relative ${item.picked ? 'shadow-xl' : 'unpicked'}" onclick="toggle(${item.id})">
-                    <span class="edit-hint">修改名稱</span>
+            list.innerHTML = filtered.length === 0 ? `<p class="text-center py-20 text-slate-300 font-bold italic">拍張照片或從相簿選擇來開始...</p>` : 
+                filtered.map(item => `
+                <div class="food-card p-6 rounded-[2.5rem] relative ${item.picked ? 'shadow-xl -translate-y-1' : 'unpicked opacity-50 grayscale'}" onclick="toggle(${item.id})">
+                    <span class="edit-hint">Tap Title to Edit</span>
                     <div class="flex justify-between items-start">
                         <div class="flex-1 pr-6">
                             <h3 class="text-xl font-black text-slate-800 leading-tight mb-1" onclick="editName(${item.id}, '${item.name}')">${item.name}</h3>
                             <p class="text-[10px] text-slate-400 font-bold mb-3 uppercase">${item.raw}</p>
-                            <div class="flex items-baseline space-x-2">
-                                <span class="text-2xl font-black text-slate-900">${symMap[state.local]}${item.price.toLocaleString()}</span>
+                            <div class="flex items-baseline space-x-2 leading-none">
+                                <span class="text-2xl font-black text-slate-900 italic">${symMap[state.local]}${item.price.toLocaleString()}</span>
                                 <span class="text-[10px] font-black text-orange-600 uppercase">≈ ${symMap[state.home]}${Math.round(item.price * state.rate)}</span>
                             </div>
                         </div>
@@ -251,17 +261,13 @@
             if (isLocal && room) room.put({ c: JSON.stringify(state) });
         }
 
-        async function fetchCcyRate() {
+        async function updateCcy() {
+            state.local = document.getElementById('local-ccy').value;
+            state.home = document.getElementById('home-ccy').value;
             const res = await fetch(`https://open.er-api.com/v6/latest/${state.local}`);
             const data = await res.json();
             state.rate = data.rates[state.home].toFixed(5);
             render(true);
-        }
-
-        function updateCcy() {
-            state.local = document.getElementById('local-ccy').value;
-            state.home = document.getElementById('home-ccy').value;
-            fetchCcyRate();
         }
 
         function filterCat(cat) { state.currentCat = cat; render(false); }
@@ -269,11 +275,11 @@
         function updQty(id, d) { event.stopPropagation(); const i = state.items.find(x => x.id === id); i.qty = Math.max(1, i.qty + d); render(true); }
         function manualRate(v) { state.rate = parseFloat(v); render(true); }
         function toggleSvc() { state.useSvc = document.getElementById('svc-fee').checked; render(true); }
-        function clearAll() { if(confirm("清空？")) { state.items = []; render(true); } }
-        function editName(id, current) { event.stopPropagation(); const n = prompt("名稱：", current); if(n) { state.items.find(x=>x.id===id).name = n; render(true); } }
+        function clearAll() { if(confirm("確定清空清單？")) { state.items = []; render(true); } }
+        function editName(id, current) { event.stopPropagation(); const n = prompt("修正品項名稱：", current); if(n) { state.items.find(x=>x.id===id).name = n; render(true); } }
         function showCheckout() {
             const sel = state.items.filter(i => i.picked);
-            if(!sel.length) return alert("尚未挑選");
+            if(!sel.length) return alert("尚未挑選品項");
             document.getElementById('checkout-list').innerHTML = sel.map(i => `<div class="flex justify-between items-center bg-slate-50 p-4 rounded-2xl mb-2"><p class="font-black text-slate-800 text-sm">${i.name} x ${i.qty}</p><p class="font-black text-slate-900">${symMap[state.local]}${(i.price * i.qty).toLocaleString()}</p></div>`).join('');
             let total = sel.reduce((s, i) => s + (i.price * i.qty), 0) * (state.useSvc ? 1.1 : 1);
             document.getElementById('checkout-total').innerText = Math.round(total).toLocaleString();
