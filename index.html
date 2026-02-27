@@ -1,161 +1,190 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
-<header class="p-5 sticky top-0 bg-white/90 backdrop-blur-md z-40 border-b">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>MenuLens HK 終極版</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root { --main-bg: #FFFBEB; --accent-orange: #FB923C; --deep-purple: #581C87; }
+        body { background-color: #F8FAFC; font-family: system-ui, -apple-system, sans-serif; -webkit-tap-highlight-color: transparent; }
+        .food-card { background-color: var(--main-bg); border: 2px solid var(--accent-orange); border-radius: 1.5rem; transition: all 0.2s; }
+        .unpicked { opacity: 0.5; filter: grayscale(1); border-color: #CBD5E1; }
+        .sticky-footer { 
+            position: fixed; bottom: 0; left: 0; right: 0; 
+            background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); 
+            box-shadow: 0 -10px 20px rgba(0,0,0,0.05); z-index: 50; 
+            padding: 1.5rem 1.5rem 2.5rem 1.5rem; border-radius: 2rem 2rem 0 0; 
+        }
+        .btn-action { display: flex; align-items: center; justify-content: center; font-weight: 900; color: white; border-radius: 1.2rem; cursor: pointer; transition: 0.2s; height: 60px; }
+        .btn-action:active { transform: scale(0.95); }
+        ::-webkit-scrollbar { display: none; }
+    </style>
+</head>
+<body class="pb-80">
+
+    <header class="p-4 sticky top-0 bg-white/90 backdrop-blur-md z-40 border-b">
         <div class="flex justify-between items-center mb-4">
             <h1 class="text-2xl font-black italic text-slate-800">Menu<span class="text-orange-500">Lens</span></h1>
-            <button onclick="location.reload()" class="text-xs font-bold text-slate-400">重置</button>
+            <button onclick="location.reload()" class="text-xs font-bold text-red-500 border border-red-100 px-3 py-1 rounded-lg bg-red-50">清空重置</button>
         </div>
         
-        <div class="w-full">
-            <label for="img-upload" 
-                   style="display: block; width: 100%; text-align: center; background-color: #FB923C; color: white; padding: 16px; border-radius: 16px; font-weight: 900; font-size: 18px; box-shadow: 0 4px 12px rgba(251, 146, 60, 0.3); cursor: pointer;">
-                📸 拍攝或上傳菜單
+        <div class="flex gap-3 mb-4">
+            <label for="camera-btn" class="btn-action flex-[1.5] bg-orange-500 shadow-lg shadow-orange-200">
+                <span class="text-xl mr-2">📸</span> 拍照辨識
             </label>
-            <input type="file" id="img-upload" accept="image/*" capture="environment" onchange="processWithWorker(this)" style="display: none;">
-        </div>
-        
-        <p id="rate-info" class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-3">匯率加載中...</p>
-    </header>
-<body class="pb-60">
+            <input type="file" id="camera-btn" accept="image/*" capture="environment" onchange="processWithWorker(this)" class="hidden">
 
-    <header class="p-5 sticky top-0 bg-white/80 backdrop-blur-md z-40 border-b flex justify-between items-center">
-        <div>
-            <h1 class="text-2xl font-black italic text-slate-800">Menu<span class="text-orange-500">Lens</span></h1>
-            <p id="rate-info" class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">匯率加載中...</p>
+            <label for="file-btn" class="btn-action flex-1 bg-slate-800 shadow-lg shadow-slate-200">
+                <span class="text-xl mr-2">📁</span> 檔案
+            </label>
+            <input type="file" id="file-btn" accept="image/*" onchange="processWithWorker(this)" class="hidden">
         </div>
-        <label for="img-upload" class="bg-orange-500 text-white px-6 py-3 rounded-2xl font-black shadow-lg active:scale-95 transition-all">
-            📸 拍照點餐
-        </label>
-        <input type="file" id="img-upload" accept="image/*" capture="environment" onchange="processWithWorker(this)" class="hidden">
+
+        <div class="flex items-center justify-between bg-slate-100 p-3 rounded-2xl text-xs font-bold border border-slate-200">
+            <div class="flex items-center gap-2">
+                <span class="text-slate-500 uppercase">目標幣值:</span>
+                <select id="target-ccy" onchange="updateCurrency()" class="bg-white border-2 border-slate-200 rounded-lg px-2 py-1 outline-none text-slate-800">
+                    <option value="HKD">🇭🇰 HKD</option>
+                    <option value="TWD">🇹🇼 TWD</option>
+                    <option value="USD">🇺🇸 USD</option>
+                    <option value="EUR">🇪🇺 EUR</option>
+                </select>
+            </div>
+            <div id="rate-text" class="text-orange-600 font-black">匯率更新中...</div>
+        </div>
     </header>
 
-    <div id="status-bar" class="hidden px-6 py-4 bg-purple-50 border-b border-purple-100">
-        <p class="processing-glow font-black text-purple-700 text-sm text-center">🏮 AI 正在透過雲端加密通道解析菜單...</p>
+    <div id="status-bar" class="hidden px-6 py-4 bg-purple-600">
+        <p class="animate-pulse font-black text-white text-sm text-center">🏮 AI 正在透過 Cloudflare 加密通道解析菜單...</p>
     </div>
 
     <main id="item-list" class="p-5 space-y-4">
-        <div class="py-20 flex flex-col items-center justify-center text-slate-300 text-center">
-            <span class="text-6xl mb-4">🍱</span>
-            <p class="font-bold">請拍攝菜單開始<br><span class="text-xs font-normal">(金鑰已在雲端安全保護)</span></p>
+        <div class="py-24 flex flex-col items-center justify-center text-slate-300 text-center">
+            <div class="text-7xl mb-6">🏮</div>
+            <p class="font-black text-slate-400">請拍攝或上傳菜單照片<br><span class="text-xs font-normal opacity-70">金鑰已由 Cloudflare Worker 安全保護</span></p>
         </div>
     </main>
 
     <footer class="sticky-footer">
         <div class="flex justify-between items-end">
-            <div>
-                <p class="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-1">估計總金額</p>
+            <div class="space-y-1">
+                <p class="text-[11px] font-black text-slate-400 uppercase tracking-widest">Estimated Total</p>
                 <div class="text-4xl font-black text-slate-900 leading-none">
-                    <span class="text-xl mr-1">¥</span><span id="total-local">0</span>
+                    <span class="text-xl mr-1 font-serif">¥</span><span id="total-jpy">0</span>
                 </div>
-                <p class="text-orange-500 font-bold text-sm mt-2">≈ HK$ <span id="total-home">0</span></p>
+                <div class="bg-orange-100 text-orange-700 px-3 py-1 rounded-full inline-block mt-2">
+                    <span class="text-xs font-black"><span id="ccy-label">HK$</span> <span id="total-converted">0</span></span>
+                </div>
             </div>
-            <div class="flex flex-col space-y-2">
-                <button onclick="location.reload()" class="bg-slate-100 text-slate-400 px-4 py-2 rounded-xl font-bold text-xs">重置清單</button>
-                <button onclick="alert('點餐確認完畢！')" class="bg-slate-900 text-white px-6 py-3 rounded-xl font-black text-sm shadow-xl">完成</button>
-            </div>
+            <button onclick="showFinalList()" class="bg-slate-900 text-white px-8 py-5 rounded-[1.8rem] font-black text-lg shadow-2xl active:scale-95 transition-all">
+                確認清單
+            </button>
         </div>
     </footer>
 
     <script>
-        // --- 設定區 ---
-        const WORKER_URL = "https://small-cell-2eaf.monetcheung1202.workers.dev"; // 👈 請填入你的 Cloudflare Worker 網址
-        let state = { items: [], rate: 0.052 }; // 預設匯率
+        // ================= CONFIG =================
+        const WORKER_URL = "https://small-cell-2eaf.monetcheung1202.workers.dev"; 
+        // ==========================================
 
-        // 1. 初始化獲取即時匯率
-        async function getExchangeRate() {
+        let state = { items: [], targetCcy: 'HKD', rate: 0.051, sym: 'HK$' };
+        const symMap = { 'HKD': 'HK$', 'TWD': 'NT$', 'USD': '$', 'EUR': '€' };
+
+        // 1. 匯率自動更新
+        async function updateCurrency() {
+            state.targetCcy = document.getElementById('target-ccy').value;
+            state.sym = symMap[state.targetCcy];
+            document.getElementById('ccy-label').innerText = state.sym;
             try {
-                const res = await fetch("https://open.er-api.com/v6/latest/JPY");
+                const res = await fetch(`https://open.er-api.com/v6/latest/JPY`);
                 const data = await res.json();
-                state.rate = data.rates.HKD;
-                document.getElementById('rate-info').innerText = `1 JPY ≈ ${state.rate.toFixed(4)} HKD`;
+                state.rate = data.rates[state.targetCcy];
+                document.getElementById('rate-text').innerText = `1 JPY ≈ ${state.rate.toFixed(4)} ${state.targetCcy}`;
+                render();
             } catch (e) {
-                document.getElementById('rate-info').innerText = `使用預設匯率 0.052`;
+                document.getElementById('rate-text').innerText = `匯率獲取失敗`;
             }
         }
-        getExchangeRate();
+        updateCurrency();
 
-        // 2. 處理圖片辨識
+        // 2. 圖片處理 (透過 Worker 隱藏 API Key)
         async function processWithWorker(input) {
-            if (!input.files[0]) return;
-            const file = input.files[0];
+            if (!input.files || !input.files[0]) return;
             const statusBar = document.getElementById('status-bar');
             statusBar.classList.remove('hidden');
 
             try {
-                const base64 = await fileToBase64(file);
-                const prompt = "你是一個專業日文翻譯，請辨識菜單。將餐點分類並轉為繁體中文，僅輸出 JSON 格式：{\"data\": [{\"name\": \"品名\", \"raw\": \"日文\", \"price\": 數字, \"cat\": \"分類\"}]}";
+                const reader = new FileReader();
+                reader.readAsDataURL(input.files[0]);
+                reader.onload = async () => {
+                    const base64 = reader.result;
+                    const prompt = "你是一個精通日文菜單的翻譯官。請辨識圖片內容並轉為繁體中文，將品項分類。僅輸出 JSON：{\"data\": [{\"name\": \"中文品名\", \"raw\": \"日文\", \"price\": 數字, \"cat\": \"分類\"}]}";
 
-                const response = await fetch(WORKER_URL, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        contents: [{ parts: [
-                            { text: prompt }, 
-                            { inline_data: { mime_type: "image/jpeg", data: base64.split(',')[1] } }
-                        ] }]
-                    })
-                });
+                    const response = await fetch(WORKER_URL, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            contents: [{ parts: [
+                                { text: prompt }, 
+                                { inline_data: { mime_type: "image/jpeg", data: base64.split(',')[1] } }
+                            ] }]
+                        })
+                    });
 
-                const result = await response.json();
-                // 檢查是否從 Worker 回傳了正確結構
-                const content = result.candidates[0].content.parts[0].text;
-                const jsonMatch = content.match(/\{.*\}/s);
-                
-                if (jsonMatch) {
-                    const parsed = JSON.parse(jsonMatch[0]);
-                    state.items = parsed.data.map(i => ({ ...i, id: Math.random(), qty: 1, picked: true }));
-                    render();
-                }
+                    const result = await response.json();
+                    const content = result.candidates[0].content.parts[0].text;
+                    const jsonMatch = content.match(/\{.*\}/s);
+                    
+                    if (jsonMatch) {
+                        const parsed = JSON.parse(jsonMatch[0]);
+                        // 將新辨識的項目加入現有清單，預設為選中
+                        parsed.data.forEach(i => {
+                            state.items.push({ ...i, id: Date.now() + Math.random(), qty: 1, picked: true });
+                        });
+                        render();
+                    }
+                    statusBar.classList.add('hidden');
+                };
             } catch (err) {
-                console.error(err);
-                alert("辨識故障：請確認 Worker 網址正確且 API Key 已設定。");
-            } finally {
+                alert("辨識故障。請確保您的 Cloudflare Worker 已部署且 GEMINI_API_KEY 已設置為 Secret。");
                 statusBar.classList.add('hidden');
             }
         }
 
-        function fileToBase64(file) {
-            return new Promise(resolve => {
-                const reader = new FileReader();
-                reader.onload = () => resolve(reader.result);
-                reader.readAsDataURL(file);
-            });
-        }
-
-        // 3. 渲染 UI
+        // 3. 渲染與邏輯
         function render() {
             const list = document.getElementById('item-list');
             if (state.items.length === 0) return;
 
             list.innerHTML = state.items.map(item => `
-                <div class="food-card p-5 ${item.picked ? '' : 'unpicked'}" onclick="toggle(${item.id})">
+                <div class="food-card p-5 ${item.picked ? 'shadow-lg' : 'unpicked'}" onclick="toggle(${item.id})">
                     <div class="flex justify-between items-center">
-                        <div class="flex-1">
-                            <span class="text-[10px] bg-white/50 text-orange-700 px-2 py-0.5 rounded font-bold border border-orange-200">${item.cat}</span>
+                        <div class="flex-1 pr-2">
+                            <span class="text-[9px] bg-white/60 text-purple-700 px-2 py-0.5 rounded font-black border border-purple-200 uppercase">${item.cat}</span>
                             <h3 class="text-lg font-black text-slate-800 mt-1">${item.name}</h3>
-                            <p class="text-[10px] text-slate-400">原名: ${item.raw}</p>
-                            <div class="mt-3 text-xl font-black text-slate-900">
-                                <span class="text-xs mr-0.5">¥</span>${item.price}
-                                <span class="text-xs font-bold text-orange-500 ml-2">≈ $${(item.price * state.rate).toFixed(1)}</span>
+                            <p class="text-[10px] text-slate-400 font-bold">${item.raw}</p>
+                            <div class="mt-4 flex items-baseline gap-2">
+                                <span class="text-2xl font-black text-slate-900"><span class="text-sm">¥</span>${item.price.toLocaleString()}</span>
+                                <span class="text-xs font-bold text-orange-500">≈ ${state.sym}${(item.price * state.rate).toFixed(1)}</span>
                             </div>
                         </div>
-                        <div class="flex items-center space-x-2" onclick="event.stopPropagation()">
-                             <button onclick="updQty(${item.id}, -1)" class="w-8 h-8 bg-white rounded-full shadow-sm border font-bold text-slate-400">-</button>
-                             <span class="font-black text-slate-700">${item.qty}</span>
-                             <button onclick="updQty(${item.id}, 1)" class="w-8 h-8 bg-white rounded-full shadow-sm border font-bold text-slate-700">+</button>
+                        <div class="flex flex-col items-center gap-2" onclick="event.stopPropagation()">
+                             <button onclick="updQty(${item.id}, 1)" class="w-10 h-10 bg-white rounded-2xl border-2 border-orange-100 shadow-sm font-black text-orange-500 text-xl">+</button>
+                             <span class="font-black text-slate-700 text-lg">${item.qty}</span>
+                             <button onclick="updQty(${item.id}, -1)" class="w-10 h-10 bg-white rounded-2xl border-2 border-orange-100 shadow-sm font-black text-orange-500 text-xl">-</button>
                         </div>
                     </div>
                 </div>
             `).join('');
-
             updateTotal();
         }
 
         function updateTotal() {
             const selected = state.items.filter(i => i.picked);
             const totalLocal = selected.reduce((s, i) => s + (i.price * i.qty), 0);
-            document.getElementById('total-local').innerText = totalLocal.toLocaleString();
-            document.getElementById('total-home').innerText = (totalLocal * state.rate).toLocaleString(undefined, {maximumFractionDigits: 1});
+            document.getElementById('total-jpy').innerText = totalLocal.toLocaleString();
+            document.getElementById('total-converted').innerText = (totalLocal * state.rate).toLocaleString(undefined, {maximumFractionDigits: 1});
         }
 
         function toggle(id) {
@@ -168,6 +197,13 @@
             const item = state.items.find(i => i.id === id);
             item.qty = Math.max(1, item.qty + d);
             render();
+        }
+
+        function showFinalList() {
+            const selected = state.items.filter(i => i.picked);
+            if(selected.length === 0) return alert("尚未選擇任何餐點");
+            const summary = selected.map(i => `${i.name} x ${i.qty}`).join('\n');
+            alert("🏮 點餐明細：\n" + summary);
         }
     </script>
 </body>
