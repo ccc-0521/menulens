@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>MenuLens World | 全球翻譯官</title>
+    <title>MenuLens World | 專業翻譯官</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
@@ -14,6 +14,7 @@
         .food-card.unpicked { opacity: 0.5; filter: grayscale(1); transform: scale(0.96); }
         .btn-press:active { transform: scale(0.92); }
         ::-webkit-scrollbar { display: none; }
+        .safe-pb { padding-bottom: env(safe-area-inset-bottom); }
     </style>
 </head>
 <body class="pb-64">
@@ -22,9 +23,9 @@
         <div class="flex justify-between items-center mb-6">
             <div>
                 <h1 class="text-3xl font-black italic tracking-tighter">Menu<span class="text-orange-500">World</span></h1>
-                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-1">AI Powered 2026</p>
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-1">Multi-Currency Global Edition</p>
             </div>
-            <button onclick="location.reload()" class="bg-slate-100 text-slate-500 text-[10px] font-black px-4 py-2 rounded-full border border-slate-200 uppercase active:bg-slate-200 transition-colors">Reset</button>
+            <button onclick="location.reload()" class="bg-slate-100 text-slate-500 text-[10px] font-black px-4 py-2 rounded-full border border-slate-200 uppercase tracking-widest active:bg-slate-200 transition-colors">Reset</button>
         </div>
 
         <div class="flex gap-4 mb-6">
@@ -45,29 +46,31 @@
                 <select id="home-ccy" onchange="getGlobalRate()" class="bg-transparent font-black text-sm outline-none text-slate-700">
                     <option value="HKD">🇭🇰 港幣 HKD</option>
                     <option value="TWD">🇹🇼 台幣 TWD</option>
-                    <option value="USD">🇺🇸 USD</option>
-                    <option value="EUR">🇪🇺 EUR</option>
+                    <option value="USD">🇺🇸 美金 USD</option>
+                    <option value="EUR">🇪🇺 歐元 EUR</option>
+                    <option value="JPY">🇯🇵 日圓 JPY</option>
                 </select>
             </div>
-            <div id="rate-tag" class="text-[11px] font-black text-orange-600 bg-orange-100 px-3 py-1 rounded-lg">等待辨識貨幣...</div>
+            <div id="rate-tag" class="text-[11px] font-black text-orange-600 bg-orange-100 px-3 py-1 rounded-lg">等待自動辨識貨幣...</div>
         </div>
     </header>
 
     <div id="loading-bar" class="hidden sticky top-[215px] z-40 px-6 py-3 bg-slate-900 text-white text-xs font-bold text-center">
-        <span class="inline-block animate-bounce mr-2">🌍</span> AI 正在偵測語言並安全翻譯中...
+        <span class="inline-block animate-bounce mr-2">🌍</span> AI 正在偵測語言與貨幣並進行翻譯...
     </div>
 
     <main id="main-list" class="p-5 space-y-6">
         <div class="py-24 text-center">
-            <div class="text-8xl mb-8 opacity-20">🌍</div>
+            <div class="text-8xl mb-8 opacity-20">🌏</div>
             <p class="text-slate-400 font-black text-lg">READY TO SCAN</p>
+            <p class="text-slate-300 text-[10px] mt-2 uppercase tracking-[0.2em] font-bold">Encrypted via Cloudflare Worker</p>
         </div>
     </main>
 
     <footer class="fixed bottom-0 left-0 right-0 glass border-t border-slate-200/60 p-8 pb-10 z-50 rounded-t-[3rem] shadow-[0_-15px_50px_-15px_rgba(0,0,0,0.1)]">
         <div class="max-w-md mx-auto flex justify-between items-end">
             <div class="space-y-2">
-                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Local Price (<span id="local-ccy-name">---</span>)</p>
+                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-tight">Total Local (<span id="local-ccy-name">---</span>)</p>
                 <div class="flex items-baseline gap-2">
                     <span id="local-ccy-sym" class="text-2xl font-black text-slate-400">---</span>
                     <span id="total-local" class="text-5xl font-black tracking-tighter text-slate-900">0</span>
@@ -81,47 +84,66 @@
                 CHECKOUT
             </button>
         </div>
+        <div class="safe-pb"></div>
     </footer>
 
     <script>
-        // --- 請確認此 URL 正確 ---
-        const WORKER_URL = "https://你的worker名字.你的用戶名.workers.dev"; 
+        // ==========================================
+        // 🚨 重要：請填入你的 Cloudflare Worker 網址
+      // ==========================================
+const WORKER_URL = "https://small-cell-2eaf.monetcheung1202.workers.dev"; 
+// ==========================================
+        // ==========================================
 
-        let state = { items: [], localCcy: '', homeCcy: 'HKD', rate: 1, symMap: {'JPY':'¥', 'HKD':'HK$', 'TWD':'NT$', 'USD':'$', 'EUR':'€', 'KRW':'₩', 'THB':'฿'} };
+        let state = { 
+            items: [], 
+            localCcy: '', 
+            homeCcy: 'HKD', 
+            rate: 1, 
+            symMap: {'JPY':'¥', 'HKD':'HK$', 'TWD':'NT$', 'USD':'$', 'EUR':'€', 'KRW':'₩', 'THB':'฿', 'GBP':'£', 'CNY':'¥'} 
+        };
 
+        // 1. 獲取即時匯率
         async function getGlobalRate() {
             state.homeCcy = document.getElementById('home-ccy').value;
             document.getElementById('home-ccy-label').innerText = state.homeCcy;
+            
             if (!state.localCcy) return;
+
             try {
                 const res = await fetch(`https://open.er-api.com/v6/latest/${state.localCcy}`);
                 const data = await res.json();
                 state.rate = data.rates[state.homeCcy];
                 document.getElementById('rate-tag').innerText = `1 ${state.localCcy} ≈ ${state.rate.toFixed(4)} ${state.homeCcy}`;
                 render();
-            } catch(e) { document.getElementById('rate-tag').innerText = "匯率獲取失敗"; }
+            } catch(e) {
+                document.getElementById('rate-tag').innerText = "匯率更新失敗";
+            }
         }
 
+        // 2. AI 影像辨識邏輯
         async function processImage(input) {
-            if (!input.files[0]) return;
+            if (!input.files || !input.files[0]) return;
             const loader = document.getElementById('loading-bar');
             loader.classList.remove('hidden');
 
             const reader = new FileReader();
             reader.readAsDataURL(input.files[0]);
             reader.onload = async () => {
-                const base64 = reader.result.split(',')[1];
-                // 💡 使用全大寫金鑰的提示詞 (但 API 呼叫已由 Worker 處理)
-                const prompt = "你是全球翻譯官。辨識菜單並：1. 偵測貨幣 ISO 代碼 (如 JPY, KRW)。2. 翻譯為繁體中文並列出價格。僅輸出 JSON：{\"currency\": \"ISO\", \"data\": [{\"name\": \"中文名\", \"raw\": \"原文\", \"price\": 數字, \"cat\": \"分類\"}]}";
+                const base64Data = reader.result.split(',')[1];
+                
+                // 💡 AI 指令：自動偵測語言與貨幣
+                const prompt = "你是一個全球旅行翻譯官。辨識圖片並：1. 偵測貨幣 ISO 代碼 (如 JPY, KRW, EUR)。2. 翻譯品項為繁體中文。僅輸出 JSON：{\"currency\": \"ISO\", \"data\": [{\"name\": \"中文名\", \"raw\": \"原文\", \"price\": 數字, \"cat\": \"分類\"}]}";
 
                 try {
                     const response = await fetch(WORKER_URL, {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({
-                            contents: [{ parts: [{ text: prompt }, { inline_data: { mime_type: "image/jpeg", data: base64 } }] }]
+                            contents: [{ parts: [{ text: prompt }, { inline_data: { mime_type: "image/jpeg", data: base64Data } }] }]
                         })
                     });
+                    
                     const result = await response.json();
                     
                     if (result.error) throw new Error(result.error);
@@ -134,31 +156,41 @@
                         state.localCcy = parsed.currency;
                         document.getElementById('local-ccy-name').innerText = state.localCcy;
                         document.getElementById('local-ccy-sym').innerText = state.symMap[state.localCcy] || state.localCcy;
-                        parsed.data.forEach(i => state.items.push({ ...i, id: Date.now() + Math.random(), qty: 1, picked: true }));
+                        
+                        parsed.data.forEach(i => {
+                            state.items.push({ ...i, id: Date.now() + Math.random(), qty: 1, picked: true });
+                        });
                         await getGlobalRate();
                     }
                 } catch (err) {
                     alert("辨識故障：" + err.message);
-                } finally { loader.classList.add('hidden'); }
+                } finally {
+                    loader.classList.add('hidden');
+                    input.value = "";
+                }
             };
         }
 
+        // 3. UI 渲染
         function render() {
             const listEl = document.getElementById('main-list');
-            const sym = state.symMap[state.localCcy] || '';
+            const localSym = state.symMap[state.localCcy] || '';
             const homeSym = state.symMap[state.homeCcy] || '';
+            
             listEl.innerHTML = state.items.map(item => `
-                <div class="food-card p-6 ${item.picked ? 'selected' : 'unpicked'}" onclick="togglePick(${item.id})">
+                <div class="food-card p-6 ${item.picked ? 'selected shadow-lg' : 'unpicked'}" onclick="togglePick(${item.id})">
                     <div class="flex justify-between items-start">
                         <div class="flex-1 pr-4">
-                            <span class="text-[9px] bg-slate-900 text-white px-2 py-1 rounded font-black uppercase">${item.cat}</span>
-                            <h3 class="text-xl font-black text-slate-800 mt-3">${item.name}</h3>
-                            <p class="text-[10px] text-slate-400 font-bold mt-1 uppercase">${item.raw}</p>
+                            <span class="text-[9px] bg-slate-900 text-white px-2 py-1 rounded font-black uppercase tracking-widest">${item.cat}</span>
+                            <h3 class="text-xl font-black text-slate-800 mt-3 tracking-tight">${item.name}</h3>
+                            <p class="text-[10px] text-slate-400 font-bold uppercase mt-1 leading-relaxed">${item.raw}</p>
+                            
                             <div class="mt-6 flex items-baseline gap-3">
-                                <span class="text-3xl font-black text-slate-900"><span class="text-sm mr-1">${sym}</span>${item.price.toLocaleString()}</span>
-                                <span class="text-sm font-bold text-orange-500">≈ ${homeSym}${(item.price * state.rate).toFixed(1)}</span>
+                                <span class="text-3xl font-black text-slate-900 leading-none"><span class="text-sm mr-1">${localSym}</span>${item.price.toLocaleString()}</span>
+                                <span class="text-sm font-bold text-orange-500 leading-none">≈ ${homeSym}${(item.price * state.rate).toFixed(1)}</span>
                             </div>
                         </div>
+                        
                         <div class="flex flex-col items-center gap-3" onclick="event.stopPropagation()">
                              <button onclick="changeQty(${item.id}, 1)" class="btn-press w-12 h-12 bg-white rounded-2xl border-2 border-slate-100 shadow-sm font-black text-2xl flex items-center justify-center">+</button>
                              <span class="font-black text-xl text-slate-900">${item.qty}</span>
@@ -167,6 +199,7 @@
                     </div>
                 </div>
             `).join('');
+            
             updateTotal();
         }
 
@@ -189,7 +222,11 @@
             document.getElementById('total-converted').innerText = (localTotal * state.rate).toLocaleString(undefined, {minimumFractionDigits: 1, maximumFractionDigits: 1});
         }
 
-        function confirmBill() { alert("點餐明細已確認！"); }
+        function confirmBill() {
+            const selectedCount = state.items.filter(i => i.picked).length;
+            if (selectedCount === 0) return alert("尚未選取餐點");
+            alert(`🏮 全球翻譯官確認\n偵測貨幣：${state.localCcy}\n已選取 ${selectedCount} 項商品。祝您旅遊愉快！`);
+        }
     </script>
 </body>
 </html>
