@@ -3,20 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>MenuLens HK - 穩定極速版</title>
+    <title>MenuLens HK - 終極穩定版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/gun/gun.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.0.3/tesseract.min.js"></script>
     <style>
         :root { --main-bg: #FFFBEB; --accent-orange: #FB923C; --deep-purple: #581C87; --soft-brown: #78350F; }
-        body { background-color: white; font-family: system-ui, -apple-system, sans-serif; -webkit-tap-highlight-color: transparent; }
-        .food-card { background-color: var(--main-bg); border: 2px solid var(--accent-orange); transition: all 0.3s; position: relative; }
-        .food-card.unpicked { opacity: 0.5; filter: grayscale(1); transform: scale(0.97); }
-        .sticky-footer { position: fixed; bottom: 0; left: 0; right: 0; background: white; box-shadow: 0 -10px 30px rgba(0,0,0,0.08); z-index: 50; border-radius: 2rem 2rem 0 0; }
-        .category-btn.active { background-color: var(--deep-purple); color: white; border-color: var(--deep-purple); }
-        .processing-glow { animation: glow 1.5s infinite; color: #7C3AED; }
-        @keyframes glow { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
-        ::-webkit-scrollbar { display: none; }
+        body { background-color: white; font-family: -apple-system, system-ui, sans-serif; -webkit-tap-highlight-color: transparent; }
+        .food-card { background-color: var(--main-bg); border: 2px solid var(--accent-orange); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .food-card.unpicked { opacity: 0.5; filter: grayscale(0.8); transform: scale(0.97); }
+        .sticky-footer { position: fixed; bottom: 0; left: 0; right: 0; background: white; box-shadow: 0 -10px 30px rgba(0,0,0,0.1); z-index: 50; border-radius: 2rem 2rem 0 0; }
+        .category-btn.active { background-color: var(--deep-purple); color: white; }
+        .processing-glow { animation: glow 1.5s infinite; }
+        @keyframes glow { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
         #pwd-input { letter-spacing: 1.2rem; text-indent: 1.2rem; }
     </style>
 </head>
@@ -25,10 +24,11 @@
     <div id="auth-screen" class="fixed inset-0 bg-slate-900 z-[200] flex items-center justify-center p-6 text-white text-center">
         <div class="bg-white p-10 rounded-[3rem] w-full max-w-sm shadow-2xl">
             <div class="text-5xl mb-4">🍱</div>
-            <h2 class="text-2xl font-black text-slate-800 mb-6 font-serif tracking-widest uppercase">MenuLens HK</h2>
+            <h2 class="text-2xl font-black text-slate-800 mb-6 uppercase tracking-widest">MenuLens HK</h2>
             <input type="password" id="pwd-input" pattern="\d*" inputmode="numeric" placeholder="••••" 
                    class="w-full bg-slate-100 rounded-3xl p-5 text-center font-black text-3xl mb-6 text-slate-800 outline-none border-4 border-transparent focus:border-orange-400">
-            <button onclick="unlockApp()" class="w-full bg-orange-500 text-white py-5 rounded-3xl font-black text-xl shadow-xl active:scale-95 transition-all">進入房間</button>
+            <button onclick="unlockApp()" class="w-full bg-orange-500 text-white py-5 rounded-3xl font-black text-xl shadow-xl active:scale-95 transition-all">解鎖系統</button>
+            <p class="text-[10px] text-slate-400 mt-4 uppercase">Secure Collaborative Ordering</p>
         </div>
     </div>
 
@@ -37,7 +37,7 @@
             <div class="flex justify-between items-center mb-5">
                 <h1 class="text-3xl font-black text-slate-800 italic">Menu<span class="text-orange-500">Lens</span></h1>
                 <div class="flex items-center space-x-3">
-                    <button onclick="logout()" class="text-xs font-bold text-slate-400 underline">登出</button>
+                    <button onclick="logout()" class="text-xs font-bold text-slate-400">登出</button>
                     <label for="camera-direct" class="bg-purple-900 text-white p-3 rounded-2xl cursor-pointer shadow-lg active:scale-90 transition-transform">
                         <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path></svg>
                     </label>
@@ -49,30 +49,34 @@
                 </div>
             </div>
 
-            <div class="flex space-x-2 overflow-x-auto no-scrollbar mb-4" id="cat-nav">
-                <button onclick="filterCat('all')" class="category-btn active px-6 py-2 rounded-full text-xs font-black border-2 border-slate-100 whitespace-nowrap">全部</button>
-                <button onclick="filterCat('主菜')" class="category-btn px-6 py-2 rounded-full text-xs font-black border-2 border-slate-100 whitespace-nowrap">主菜</button>
-                <button onclick="filterCat('配菜')" class="category-btn px-6 py-2 rounded-full text-xs font-black border-2 border-slate-100 whitespace-nowrap">配菜</button>
-                <button onclick="filterCat('飲料')" class="category-btn px-6 py-2 rounded-full text-xs font-black border-2 border-slate-100 whitespace-nowrap">飲料</button>
+            <div class="flex space-x-2 overflow-x-auto no-scrollbar mb-4">
+                <button onclick="filterCat('all')" class="category-btn active px-6 py-2 rounded-full text-xs font-black border-2 border-slate-100 whitespace-nowrap transition-all uppercase">All Items</button>
+                <button onclick="filterCat('主菜')" class="category-btn px-6 py-2 rounded-full text-xs font-black border-2 border-slate-100 whitespace-nowrap transition-all">主菜</button>
+                <button onclick="filterCat('配菜')" class="category-btn px-6 py-2 rounded-full text-xs font-black border-2 border-slate-100 whitespace-nowrap transition-all">配菜</button>
+                <button onclick="filterCat('飲料')" class="category-btn px-6 py-2 rounded-full text-xs font-black border-2 border-slate-100 whitespace-nowrap transition-all">飲料</button>
             </div>
 
-            <div class="bg-blue-600 p-4 rounded-[2rem] text-white shadow-lg space-y-2">
+            <div class="bg-blue-600 p-4 rounded-[2rem] text-white shadow-lg space-y-3">
                 <div class="flex justify-between items-center">
-                    <select id="local-ccy" onchange="updateCurrency()" class="bg-blue-700 text-white font-bold p-1 rounded-xl outline-none">
+                    <select id="local-ccy" onchange="updateCurrency()" class="bg-blue-700 text-white font-bold p-2 rounded-xl outline-none border-none">
                         <option value="JPY">🇯🇵 JPY</option>
                         <option value="KRW">🇰🇷 KRW</option>
                         <option value="EUR">🇪🇺 EUR</option>
                         <option value="THB">🇹🇭 THB</option>
                     </select>
-                    <span class="opacity-50">➜</span>
-                    <select id="home-ccy" onchange="updateCurrency()" class="bg-blue-700 text-white font-bold p-1 rounded-xl outline-none text-right">
+                    <span class="text-xl opacity-50">➜</span>
+                    <select id="home-ccy" onchange="updateCurrency()" class="bg-blue-700 text-white font-bold p-2 rounded-xl outline-none text-right border-none">
                         <option value="HKD">🇭🇰 HKD</option>
                         <option value="TWD">🇹🇼 TWD</option>
+                        <option value="USD">🇺🇸 USD</option>
                     </select>
                 </div>
-                <div class="pt-1 border-t border-blue-500/50 flex justify-between items-center font-mono text-[10px]">
-                    <span>1 <span class="cur-local-code">JPY</span> =</span>
-                    <input type="number" id="rate-display" step="0.0001" onchange="manualRate(this.value)" class="bg-blue-800 text-right px-2 rounded w-20 outline-none border-none text-blue-200">
+                <div class="pt-2 border-t border-blue-500/50 flex justify-between items-center font-mono text-xs">
+                    <span>1 <span class="cur-l-code">JPY</span> =</span>
+                    <div class="flex items-center space-x-1">
+                        <input type="number" id="rate-display" step="0.0001" onchange="manualRate(this.value)" class="bg-blue-800 text-right px-2 py-1 rounded w-28 outline-none border-none text-blue-200 font-bold">
+                        <span class="cur-h-code uppercase font-bold">HKD</span>
+                    </div>
                 </div>
             </div>
         </header>
@@ -81,78 +85,69 @@
 
         <div class="sticky-footer p-8 bg-white">
             <div id="progress-container" class="hidden mb-4">
-                <div class="flex justify-between text-[10px] font-black text-purple-700 mb-1 uppercase tracking-tighter">
-                    <span id="p-status" class="processing-glow italic">正在啟動辨識...</span>
+                <div class="flex justify-between text-[10px] font-black text-purple-700 mb-1">
+                    <span id="p-status" class="processing-glow uppercase">Engine Activating...</span>
                     <span id="p-count">0/0</span>
                 </div>
-                <div class="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
+                <div class="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
                     <div id="loading-bar" class="h-full bg-purple-600 w-0 transition-all duration-300"></div>
                 </div>
-                <div id="debug-log" class="text-[8px] text-slate-400 mt-1 font-mono"></div>
             </div>
 
             <div class="flex justify-between items-center mb-6">
                 <div>
-                    <span class="text-[10px] font-black text-slate-400 uppercase">Selected Bill</span>
-                    <div class="flex items-baseline space-x-2">
-                        <span class="text-3xl font-black text-slate-900"><span class="sym-local">¥</span><span id="total-local">0</span></span>
-                        <span class="text-sm font-bold text-orange-500">≈ <span class="sym-home">HK$</span><span id="total-home">0</span></span>
+                    <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Bill</span>
+                    <div class="flex items-baseline space-x-2 leading-none">
+                        <span class="text-3xl font-black text-slate-900"><span class="sym-l">¥</span><span id="total-local">0</span></span>
+                        <span class="text-sm font-bold text-orange-500">≈ <span class="sym-h">HK$</span><span id="total-home">0</span></span>
                     </div>
                 </div>
                 <button onclick="showCheckout()" class="bg-orange-500 text-white px-10 py-5 rounded-[1.8rem] font-black text-xl shadow-xl active:scale-95 transition-all">CHECKOUT</button>
             </div>
+            
             <div class="flex justify-between items-center px-2 border-t pt-4">
-                <label class="flex items-center space-x-2 text-[11px] font-bold text-slate-400">
+                <label class="flex items-center space-x-2 text-[11px] font-bold text-slate-400 uppercase">
                     <input type="checkbox" id="svc-fee" onchange="toggleSvc()" class="accent-orange-500 w-4 h-4">
-                    <span>+10% 加一服務費</span>
+                    <span>+10% Service Fee</span>
                 </label>
-                <button onclick="clearAll()" class="text-[11px] font-bold text-red-400 underline uppercase tracking-tighter">Clear All</button>
+                <button onclick="clearAll()" class="text-[11px] font-bold text-red-400 underline uppercase tracking-widest">Clear All</button>
             </div>
         </div>
     </div>
 
     <div id="checkout-modal" class="hidden fixed inset-0 bg-slate-900/95 z-[100] flex items-center justify-center p-6" onclick="closeCheckout()">
         <div class="bg-white w-full max-w-sm rounded-[3rem] p-10 shadow-2xl" onclick="event.stopPropagation()">
-            <h2 class="text-2xl font-black text-slate-800 mb-6 border-b pb-4">訂單確認彙總</h2>
-            <div id="checkout-list" class="space-y-4 mb-6 max-h-[40vh] overflow-y-auto pr-2"></div>
+            <h2 class="text-2xl font-black text-slate-800 mb-6 border-b pb-4">訂單明細確認</h2>
+            <div id="checkout-list" class="space-y-4 mb-6 max-h-[45vh] overflow-y-auto pr-2"></div>
             <div class="text-right border-t pt-6">
-                <p class="text-slate-400 text-[10px] font-bold uppercase mb-1">Final Total</p>
-                <p class="text-4xl font-black text-orange-600 italic"><span class="sym-local">¥</span><span id="checkout-total">0</span></p>
+                <p class="text-slate-400 text-[10px] font-bold uppercase mb-1">Final Amount (Incl. Svc)</p>
+                <p class="text-4xl font-black text-orange-600 italic"><span class="sym-l">¥</span><span id="checkout-total">0</span></p>
             </div>
-            <button onclick="closeCheckout()" class="w-full mt-10 bg-slate-900 text-white py-5 rounded-3xl font-black text-lg">返回</button>
+            <button onclick="closeCheckout()" class="w-full mt-10 bg-slate-900 text-white py-5 rounded-3xl font-black text-lg">返回修改</button>
         </div>
     </div>
 
     <script>
-        let gun, room, worker = null;
+        let gun, room;
         const symMap = { 'JPY':'¥', 'KRW':'₩', 'THB':'฿', 'EUR':'€', 'USD':'$', 'TWD':'NT$', 'HKD':'HK$', 'CNY':'¥' };
         let state = { local: 'JPY', home: 'HKD', rate: 0.051, useSvc: false, items: [], currentCat: 'all' };
 
-        // 📝 除錯訊息函數
-        function log(msg) {
-            console.log(msg);
-            document.getElementById('debug-log').innerText = msg;
-        }
-
-        // 🎨 圖片極速預處理
-        function preprocess(file) {
+        // 🎨 圖片極速處理邏輯 (大幅減少辨識時間)
+        function fastPreprocess(file) {
             return new Promise((resolve) => {
                 const reader = new FileReader();
                 reader.onload = (e) => {
                     const img = new Image();
                     img.onload = () => {
                         const canvas = document.createElement('canvas');
-                        const maxSide = 1000; 
+                        const maxSide = 1000; // 壓縮至 1000px，提速關鍵
                         let w = img.width, h = img.height;
-                        if (w > maxSide || h > maxSide) {
-                            const ratio = Math.min(maxSide/w, maxSide/h);
-                            w *= ratio; h *= ratio;
-                        }
-                        canvas.width = w; canvas.height = h;
+                        const ratio = Math.min(maxSide/w, maxSide/h);
+                        canvas.width = w * ratio; canvas.height = h * ratio;
                         const ctx = canvas.getContext('2d');
-                        ctx.filter = 'grayscale(100%) contrast(1.5)';
-                        ctx.drawImage(img, 0, 0, w, h);
-                        resolve(canvas.toDataURL('image/jpeg', 0.7));
+                        ctx.filter = 'grayscale(100%) contrast(1.8) brightness(1.1)';
+                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                        resolve(canvas.toDataURL('image/jpeg', 0.8));
                     };
                     img.src = e.target.result;
                 };
@@ -160,42 +155,28 @@
             });
         }
 
-        // 🌟 核心：高穩定性辨識邏輯
         async function processImages(input) {
             if (!input.files || input.files.length === 0) return;
             const pContainer = document.getElementById('progress-container');
             const pStatus = document.getElementById('p-status');
-            const pCount = document.getElementById('p-count');
-            pContainer.classList.remove('hidden');
+            const lBar = document.getElementById('loading-bar');
             
-            log("步驟 1: 建立 Worker...");
+            pContainer.classList.remove('hidden');
+            pStatus.innerText = "正在調用穩定引擎...";
+
             try {
-                // 如果已經有 Worker 先關閉，確保乾淨啟動
-                if (worker) { await worker.terminate(); worker = null; }
-                
-                worker = await Tesseract.createWorker({
-                    logger: m => {
-                        if (m.status === 'recognizing text') {
-                            document.getElementById('loading-bar').style.width = Math.floor(m.progress * 100) + '%';
-                        }
-                    }
-                });
-
-                log("步驟 2: 載入語言包...");
-                await worker.loadLanguage('jpn+eng');
-                await worker.initialize('jpn+eng');
-                await worker.setParameters({
-                    tessedit_char_whitelist: '0123456789.,¥$ぁあぃいぅうぇえぉおかがきぎくぐけげこごさざしじすずせぜそぞただちぢっつづてでとどなにぬねのはばぱひびぴふぶぷへべぺほぼぽまみむめもゃやゅゆょよらりるれろゎわゐゑをんァアィイゥウェエォオカGA一-龠ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
-                });
-
                 const files = Array.from(input.files);
                 for (let i = 0; i < files.length; i++) {
-                    pCount.innerText = `${i+1}/${files.length}`;
-                    log(`步驟 3: 辨識第 ${i+1} 張...`);
+                    const processed = await fastPreprocess(files[i]);
+                    pStatus.innerText = `正在分析圖片 (${i+1}/${files.length})...`;
                     
-                    const processedData = await preprocess(files[i]);
-                    const { data: { lines } } = await worker.recognize(processedData);
-                    
+                    // 使用最穩定的一次性 recognize 模式，避免 Worker 狀態衝突
+                    const { data: { lines } } = await Tesseract.recognize(processed, 'jpn+eng', {
+                        workerPath: 'https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.0.3/worker.min.js',
+                        corePath: 'https://cdnjs.cloudflare.com/ajax/libs/tesseract.js-core/5.0.0/tesseract-core.wasm.js',
+                        logger: m => { if(m.status==='recognizing text') lBar.style.width = (m.progress*100)+'%'; }
+                    });
+
                     for (let l of lines) {
                         const m = l.text.match(/(\d{1,3}(?:,\d{3})*(?:\.\d+)?)/);
                         if (m) {
@@ -213,22 +194,17 @@
                     }
                     render(true);
                 }
-                log("辨識完成，釋放資源...");
-                await worker.terminate();
-                worker = null;
             } catch (err) {
-                log("錯誤: " + err.message);
-                alert("辨識卡住，請確認網絡流暢並重新整理。");
+                alert("辨識發生故障。請確保網路連線正常並刷新頁面。");
             }
             pContainer.classList.add('hidden');
-            input.value = ""; 
+            input.value = "";
         }
 
-        // --- 其餘功能模組保持不變 ---
         function unlockApp() {
             const pwd = document.getElementById('pwd-input').value;
             if (!pwd) return;
-            const roomId = 'room-hk-v11-stable-' + btoa(pwd).substring(0, 8);
+            const roomId = 'room-hk-ultra-v12-' + btoa(pwd).substring(0, 10);
             gun = Gun(['https://gun-manhattan.herokuapp.com/gun']);
             room = gun.get(roomId);
             room.on(d => { if(d && d.c) { state = JSON.parse(d.c); render(false); } });
@@ -258,22 +234,26 @@
 
         function render(isLocal = true) {
             document.getElementById('rate-display').value = state.rate;
-            document.querySelectorAll('.cur-local-code').forEach(el => el.innerText = state.local);
-            document.querySelectorAll('.sym-local').forEach(el => el.innerText = symMap[state.local]);
-            document.querySelectorAll('.sym-home').forEach(el => el.innerText = symMap[state.home]);
+            document.querySelectorAll('.cur-l-code').forEach(el => el.innerText = state.local);
+            document.querySelectorAll('.cur-h-code').forEach(el => el.innerText = state.home);
+            document.querySelectorAll('.sym-l').forEach(el => el.innerText = symMap[state.local]);
+            document.querySelectorAll('.sym-h').forEach(el => el.innerText = symMap[state.home]);
             const list = document.getElementById('item-list');
             const filtered = state.currentCat === 'all' ? state.items : state.items.filter(i => i.category === state.currentCat);
-            list.innerHTML = filtered.map(item => `
+            
+            list.innerHTML = filtered.length === 0 ? `<div class="text-center py-20 text-slate-300 font-bold italic">清單空白，請拍照加入</div>` : 
+                filtered.map(item => `
                 <div class="food-card p-6 rounded-[2.5rem] ${item.picked ? 'shadow-xl' : 'unpicked opacity-50 grayscale'}" onclick="toggle(${item.id})">
                     <div class="flex justify-between items-start">
                         <div class="flex-1 pr-6">
                             <div class="flex flex-wrap gap-1 mb-2">
                                 ${item.tags.map(tag => `<span class="bg-purple-900 text-white text-[8px] px-2 py-0.5 rounded-full font-black uppercase">${tag}</span>`).join('')}
                             </div>
-                            <h3 class="text-xl font-black text-slate-800 mb-1 leading-tight" onclick="editName(${item.id}, '${item.name}')">${item.name}</h3>
-                            <p class="text-[10px] text-slate-400 font-bold mb-3 uppercase line-clamp-1">${item.raw}</p>
-                            <div class="flex items-baseline space-x-2 leading-none">
-                                <span class="text-2xl font-black text-slate-900 italic">${symMap[state.local]}${item.price.toLocaleString()}</span>
+                            <h3 class="text-xl font-black text-slate-800 leading-tight mb-1" onclick="editName(${item.id}, '${item.name}')">${item.name}</h3>
+                            <p class="text-[10px] text-slate-400 font-bold mb-1">原文：${item.raw}</p>
+                            <p class="text-[10px] text-slate-500 italic mt-2">繁體中文翻譯結果</p>
+                            <div class="flex items-baseline space-x-2 leading-none mt-4">
+                                <span class="text-2xl font-black text-slate-900">${symMap[state.local]}${item.price.toLocaleString()}</span>
                                 <span class="text-[10px] font-black text-orange-600 uppercase">≈ ${symMap[state.home]}${Math.round(item.price * state.rate)}</span>
                             </div>
                         </div>
@@ -298,7 +278,7 @@
         function toggleSvc() { state.useSvc = document.getElementById('svc-fee').checked; render(true); }
         function manualRate(v) { state.rate = parseFloat(v); render(true); }
         function filterCat(cat) { state.currentCat = cat; render(false); }
-        function clearAll() { if(confirm("確定重置？")) { state.items = []; render(true); } }
+        function clearAll() { if(confirm("確定重置清單？")) { state.items = []; render(true); } }
         function logout() { sessionStorage.removeItem('ml_last_pwd'); location.reload(); }
         function closeCheckout() { document.getElementById('checkout-modal').classList.add('hidden'); }
         function showCheckout() {
