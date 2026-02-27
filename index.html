@@ -130,11 +130,19 @@ const WORKER_URL = "https://small-cell-2eaf.monetcheung1202.workers.dev";
             const reader = new FileReader();
             reader.readAsDataURL(input.files[0]);
             reader.onload = async () => {
-                const base64Data = reader.result.split(',')[1];
+                // 確保圖片數據乾淨地傳送
+const base64Data = reader.result.split(',')[1];
                 
                 // 💡 AI 指令：自動偵測語言與貨幣
-                const prompt = "你是一個全球旅行翻譯官。辨識圖片並：1. 偵測貨幣 ISO 代碼 (如 JPY, KRW, EUR)。2. 翻譯品項為繁體中文。僅輸出 JSON：{\"currency\": \"ISO\", \"data\": [{\"name\": \"中文名\", \"raw\": \"原文\", \"price\": 數字, \"cat\": \"分類\"}]}";
-
+                // 💡 修改這段指令：加入「強制使用繁體中文」與「嚴格禁止亂碼」的限制
+const prompt = `你是一個專業的全球菜單翻譯官。請精確辨識圖片中的餐點內容：
+1. 自動偵測貨幣（如 JPY, KRW, USD）。
+2. 將所有餐點名稱翻譯為「正確、自然、流暢的繁體中文」。
+3. 嚴禁輸出無意義的英文字母亂碼。
+4. 輸出必須是嚴格的 JSON 格式，例如：
+{"currency": "JPY", "data": [{"name": "鮪魚大腹刺身", "raw": "マグロ大トロ", "price": 980, "cat": "刺身"}]}
+請開始翻譯。`;
+                
                 try {
                     const response = await fetch(WORKER_URL, {
                         method: "POST",
