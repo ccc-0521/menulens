@@ -3,45 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>MenuLens HK - 終極點餐助手</title>
+    <title>MenuLens HK - 極速穩定版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/gun/gun.js"></script>
     <script src="https://unpkg.com/tesseract.js@5.0.3/dist/tesseract.min.js"></script>
     <style>
-        :root { 
-            --main-bg: #FFFBEB; 
-            --accent-orange: #FB923C; 
-            --deep-purple: #581C87; 
-            --soft-brown: #78350F;
-            --text-dark: #1E293B;
-        }
+        :root { --main-bg: #FFFBEB; --accent-orange: #FB923C; --deep-purple: #581C87; --soft-brown: #78350F; }
         body { background-color: white; font-family: system-ui, -apple-system, sans-serif; -webkit-tap-highlight-color: transparent; }
-        
-        /* 食物項目卡片樣式 */
-        .food-card { 
-            background-color: var(--main-bg); 
-            border: 2px solid var(--accent-orange); 
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
-        }
+        .food-card { background-color: var(--main-bg); border: 2px solid var(--accent-orange); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative; }
         .food-card.unpicked { opacity: 0.5; filter: grayscale(1); transform: scale(0.97); border-color: #E2E8F0; }
-        
-        /* 密碼點點間距 */
-        #pwd-input { letter-spacing: 1.2rem; text-indent: 1.2rem; }
-        
-        /* 底部頁腳 */
-        .sticky-footer { 
-            position: fixed; bottom: 0; left: 0; right: 0; 
-            background: white; 
-            box-shadow: 0 -10px 30px rgba(0,0,0,0.08); 
-            z-index: 50; 
-            border-radius: 2.5rem 2.5rem 0 0; 
-        }
-
+        .sticky-footer { position: fixed; bottom: 0; left: 0; right: 0; background: white; box-shadow: 0 -10px 30px rgba(0,0,0,0.08); z-index: 50; border-radius: 2.5rem 2.5rem 0 0; }
         .category-btn.active { background-color: var(--deep-purple); color: white; border-color: var(--deep-purple); }
         .processing-glow { animation: glow 1.5s infinite; color: #7C3AED; }
         @keyframes glow { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
         ::-webkit-scrollbar { display: none; }
+        #pwd-input { letter-spacing: 1.2rem; text-indent: 1.2rem; }
     </style>
 </head>
 <body class="pb-80">
@@ -52,7 +28,7 @@
             <h2 class="text-2xl font-black text-slate-800 mb-6 font-serif tracking-widest uppercase">MenuLens HK</h2>
             <input type="password" id="pwd-input" pattern="\d*" inputmode="numeric" placeholder="••••" 
                    class="w-full bg-slate-100 rounded-3xl p-5 text-center font-black text-3xl mb-6 text-slate-800 outline-none border-4 border-transparent focus:border-orange-400">
-            <button onclick="unlockApp()" class="w-full bg-orange-500 text-white py-5 rounded-3xl font-black text-xl shadow-xl active:scale-95 transition-all">解鎖系統</button>
+            <button onclick="unlockApp()" class="w-full bg-orange-500 text-white py-5 rounded-3xl font-black text-xl shadow-xl active:scale-95 transition-all">解鎖並加速引擎</button>
         </div>
     </div>
 
@@ -62,12 +38,10 @@
                 <h1 class="text-3xl font-black text-slate-800 italic">Menu<span class="text-orange-500">Lens</span></h1>
                 <div class="flex items-center space-x-3">
                     <button onclick="logout()" class="text-xs font-bold text-slate-400 underline">登出</button>
-                    
                     <label for="camera-direct" class="bg-purple-900 text-white p-3 rounded-2xl cursor-pointer shadow-lg active:scale-90 transition-transform">
                         <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path></svg>
                     </label>
                     <input type="file" id="camera-direct" accept="image/*" capture="environment" onchange="processImages(this)" class="hidden">
-
                     <label for="album-selection" class="bg-slate-800 text-white p-3 rounded-2xl cursor-pointer shadow-lg active:scale-90 transition-transform">
                         <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                     </label>
@@ -110,7 +84,7 @@
         <div class="sticky-footer p-8 bg-white">
             <div id="progress-container" class="hidden mb-4">
                 <div class="flex justify-between text-[10px] font-black text-purple-700 mb-1">
-                    <span id="p-status" class="processing-glow uppercase tracking-widest">正在分析菜單...</span>
+                    <span id="p-status" class="processing-glow uppercase tracking-widest italic">Lightning OCR...</span>
                     <span id="p-count">0/0</span>
                 </div>
                 <div class="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
@@ -126,15 +100,13 @@
                         <span class="text-sm font-bold text-orange-500">≈ <span class="sym-home">HK$</span><span id="total-home">0</span></span>
                     </div>
                 </div>
-                <button onclick="showCheckout()" class="bg-orange-500 text-white px-10 py-5 rounded-[1.8rem] font-black text-xl shadow-xl active:scale-95 transition-all">
-                    CHECKOUT
-                </button>
+                <button onclick="showCheckout()" class="bg-orange-500 text-white px-10 py-5 rounded-[1.8rem] font-black text-xl shadow-xl active:scale-95 transition-all">CHECKOUT</button>
             </div>
             
             <div class="flex justify-between items-center px-2 border-t pt-4">
                 <label class="flex items-center space-x-2 text-[11px] font-bold text-slate-400">
                     <input type="checkbox" id="svc-fee" onchange="toggleSvc()" class="accent-orange-500 w-4 h-4">
-                    <span>+10% 服務費 (加一)</span>
+                    <span>+10% 加一服務費</span>
                 </label>
                 <button onclick="clearAll()" class="text-[11px] font-bold text-red-400 underline uppercase tracking-tighter">Clear All</button>
             </div>
@@ -154,21 +126,58 @@
     </div>
 
     <script>
-        let gun, room;
+        let gun, room, worker;
         const symMap = { 'JPY':'¥', 'KRW':'₩', 'THB':'฿', 'EUR':'€', 'USD':'$', 'TWD':'NT$', 'HKD':'HK$', 'CNY':'¥' };
         let state = { local: 'JPY', home: 'HKD', rate: 0.051, useSvc: false, items: [], currentCat: 'all' };
 
-        // 🔐 認證與初始化
+        // 🌟 初始化辨識引擎：加入暴力 CDN 優化
+        async function initOCR() {
+            if (worker) return;
+            worker = await Tesseract.createWorker({
+                corePath: 'https://unpkg.com/tesseract.js-core@v5.0.0/tesseract-core.wasm.js',
+                logger: m => { if (m.status === 'recognizing text') updateProgress(m.progress); }
+            });
+            await worker.loadLanguage('jpn+eng');
+            await worker.initialize('jpn+eng');
+            await worker.setParameters({
+                tessedit_char_whitelist: '0123456789.,¥$ぁあぃいぅうぇえぉおかがきぎくぐけげこごさざしじすずせぜそぞただちぢっつづてでとどなにぬねのはばぱひびぴふぶぷへべぺほぼぽまみむめもゃやゅゆょよらりるれろゎわゐゑをんァアィイゥウェエォオカGA一-龠ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
+            });
+        }
+
+        // ⚡ 圖片預處理：極速化的關鍵 (壓縮圖尺寸)
+        function preprocessImage(file) {
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        const maxSide = 1000; // 限制最大邊長為 1000px，能極大加快辨識
+                        let w = img.width, h = img.height;
+                        if (w > h && w > maxSide) { h *= maxSide / w; w = maxSide; }
+                        else if (h > maxSide) { w *= maxSide / h; h = maxSide; }
+                        canvas.width = w; canvas.height = h;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, w, h);
+                        resolve(canvas.toDataURL('image/jpeg', 0.8));
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
         function unlockApp() {
             const pwd = document.getElementById('pwd-input').value;
             if (!pwd) return;
-            const roomId = 'room-hk-ultimate-final-' + btoa(pwd).substring(0, 8);
+            const roomId = 'room-hk-final-v2026-' + btoa(pwd).substring(0, 8);
             gun = Gun(['https://gun-manhattan.herokuapp.com/gun']);
             room = gun.get(roomId);
             room.on(d => { if(d && d.c) { state = JSON.parse(d.c); render(false); } });
             document.getElementById('auth-screen').classList.add('hidden');
             document.getElementById('app-body').classList.remove('hidden');
             sessionStorage.setItem('ml_last_pwd', pwd);
+            initOCR(); 
         }
 
         if(sessionStorage.getItem('ml_last_pwd')) {
@@ -183,7 +192,7 @@
                 const res = await fetch(`https://open.er-api.com/v6/latest/${state.local}`);
                 const data = await res.json();
                 state.rate = data.rates[state.home].toFixed(5);
-            } catch (e) { console.log("Exchange API Error"); }
+            } catch (e) { console.log("Currency API Error"); }
             render(true);
         }
 
@@ -196,62 +205,46 @@
             } catch (e) { return text; }
         }
 
-        // --- 📸 暴力啟動 OCR (解決卡死、記憶體釋放) ---
         async function processImages(input) {
             if (!input.files || input.files.length === 0) return;
             const pContainer = document.getElementById('progress-container');
             const pStatus = document.getElementById('p-status');
-            const lBar = document.getElementById('loading-bar');
             const pCount = document.getElementById('p-count');
-            
             pContainer.classList.remove('hidden');
-            lBar.style.width = '10%';
-            pStatus.innerText = "正在調用極速引擎...";
+            await initOCR();
 
-            try {
-                const worker = await Tesseract.createWorker({
-                    corePath: 'https://unpkg.com/tesseract.js-core@v5.0.0/tesseract-core.wasm.js',
-                    logger: m => { if (m.status === 'recognizing text') lBar.style.width = Math.floor(m.progress * 100) + '%'; }
-                });
-
-                await worker.loadLanguage('jpn+eng');
-                await worker.initialize('jpn+eng');
-                // 極速白名單優化
-                await worker.setParameters({
-                    tessedit_char_whitelist: '0123456789.,¥$ぁあぃいぅうぇえぉおかがきぎくぐけげこごさざしじすずせぜそぞただちぢっつづてでとどなにぬねのはばぱひびぴふぶぷへべぺほぼぽまみむめもゃやゅゆょよらりるれろゎわゐゑをんァアィイゥウェエォオカGA一-龠ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
-                });
-
-                const files = Array.from(input.files);
-                for (let i = 0; i < files.length; i++) {
-                    pCount.innerText = `${i+1}/${files.length}`;
-                    pStatus.innerText = `正在分析第 ${i+1} 張圖片...`;
-                    const { data: { lines } } = await worker.recognize(files[i]);
-                    for (let l of lines) {
-                        const m = l.text.match(/(\d{1,3}(?:,\d{3})*(?:\.\d+)?)/);
-                        if (m) {
-                            const price = parseFloat(m[1].replace(/,/g, ''));
-                            const raw = l.text.replace(m[0],'').trim();
-                            if (price > 10 && raw.length > 1) {
-                                const trans = await translate(raw);
-                                // 分批追加 (Push)
-                                state.items.push({ 
-                                    id: Date.now() + Math.random(), 
-                                    name: trans, raw: raw, price, qty: 1, picked: false,
-                                    category: raw.includes('飲') ? '飲料' : '主菜',
-                                    tags: raw.includes('Rare') ? ['RARE DOG!'] : (raw.includes('Allergen') ? ['Allergen'] : [])
-                                });
-                            }
+            const files = Array.from(input.files);
+            for (let i = 0; i < files.length; i++) {
+                pCount.innerText = `${i+1}/${files.length}`;
+                pStatus.innerText = "正在極速壓縮圖片...";
+                const processedData = await preprocessImage(files[i]);
+                
+                pStatus.innerText = "AI 正在分析文字...";
+                const { data: { lines } } = await worker.recognize(processedData);
+                
+                for (let l of lines) {
+                    const m = l.text.match(/(\d{1,3}(?:,\d{3})*(?:\.\d+)?)/);
+                    if (m) {
+                        const price = parseFloat(m[1].replace(/,/g, ''));
+                        const raw = l.text.replace(m[0],'').trim();
+                        if (price > 10 && raw.length > 1) {
+                            const trans = await translate(raw);
+                            state.items.push({ 
+                                id: Date.now() + Math.random(), name: trans, raw: raw, price, qty: 1, picked: false,
+                                category: raw.includes('飲') ? '飲料' : '主菜',
+                                tags: raw.includes('Rare') ? ['RARE DOG!'] : (raw.includes('Allergen') ? ['Allergen'] : [])
+                            });
                         }
                     }
-                    render(true);
                 }
-                await worker.terminate(); // 釋放記憶體
-                pContainer.classList.add('hidden');
-            } catch (err) { alert("辨識引擎出錯，請重試"); pContainer.classList.add('hidden'); }
+                render(true);
+            }
+            pContainer.classList.add('hidden');
             input.value = ""; 
         }
 
-        // --- 🎮 UI 渲染 (卡片、分類、貨幣) ---
+        function updateProgress(p) { document.getElementById('loading-bar').style.width = Math.floor(p * 100) + '%'; }
+
         function render(isLocal = true) {
             document.getElementById('rate-display').value = state.rate;
             document.querySelectorAll('.cur-local-code').forEach(el => el.innerText = state.local);
@@ -262,17 +255,17 @@
             const list = document.getElementById('item-list');
             const filtered = state.currentCat === 'all' ? state.items : state.items.filter(i => i.category === state.currentCat);
             
-            list.innerHTML = filtered.length === 0 ? `<div class="text-center py-20 text-slate-300 font-bold italic">清單空白，請拍照或選取照片</div>` : 
+            list.innerHTML = filtered.length === 0 ? `<div class="text-center py-20 text-slate-300 font-bold italic">清單空白，請加入圖片...</div>` : 
                 filtered.map(item => `
                 <div class="food-card p-6 rounded-[2.5rem] ${item.picked ? 'shadow-xl' : 'unpicked opacity-50 grayscale'}" onclick="toggle(${item.id})">
-                    <span class="edit-hint">修正標題</span>
+                    <span class="edit-hint text-[8px] absolute top-4 right-4">Tap to Edit</span>
                     <div class="flex justify-between items-start">
                         <div class="flex-1 pr-6">
                             <div class="flex flex-wrap gap-1 mb-2">
                                 ${item.tags.map(tag => `<span class="bg-purple-900 text-white text-[8px] px-2 py-0.5 rounded-full font-black uppercase">${tag}</span>`).join('')}
                             </div>
                             <h3 class="text-xl font-black text-slate-800 leading-tight mb-1" onclick="editName(${item.id}, '${item.name}')">${item.name}</h3>
-                            <p class="text-[10px] text-slate-400 font-bold mb-3 uppercase tracking-tighter">原文：${item.raw}</p>
+                            <p class="text-[10px] text-slate-400 font-bold mb-1 uppercase">${item.raw}</p>
                             <p class="text-[11px] text-slate-500 font-medium leading-relaxed mb-4 italic text-brown-800">繁體中文自動翻譯結果</p>
                             <div class="flex items-baseline space-x-2 leading-none">
                                 <span class="text-2xl font-black text-slate-900">${symMap[state.local]}${item.price.toLocaleString()}</span>
@@ -289,21 +282,20 @@
             `).join('');
 
             const sel = state.items.filter(i => i.picked);
-            let total = sel.reduce((s, i) => s + (i.price * i.qty), 0);
-            if(state.useSvc) total *= 1.1;
+            let total = sel.reduce((s, i) => s + (i.price * i.qty), 0) * (state.useSvc ? 1.1 : 1);
             document.getElementById('total-local').innerText = Math.round(total).toLocaleString();
             document.getElementById('total-home').innerText = Math.round(total * state.rate).toLocaleString();
             if (isLocal && room) room.put({ c: JSON.stringify(state) });
         }
 
+        // 通用邏輯函數保持不變
         function toggle(id) { const i = state.items.find(x => x.id === id); i.picked = !i.picked; render(true); }
         function updQty(id, d) { event.stopPropagation(); const i = state.items.find(x => x.id === id); i.qty = Math.max(1, i.qty + d); render(true); }
-        function editName(id, current) { event.stopPropagation(); const n = prompt("修正品項名稱：", current); if(n) { state.items.find(x=>x.id===id).name = n; render(true); } }
+        function editName(id, current) { event.stopPropagation(); const n = prompt("修正名稱：", current); if(n) { state.items.find(x=>x.id===id).name = n; render(true); } }
         function toggleSvc() { state.useSvc = document.getElementById('svc-fee').checked; render(true); }
         function manualRate(v) { state.rate = parseFloat(v); render(true); }
         function filterCat(cat) { state.currentCat = cat; render(false); }
-        function clearAll() { if(confirm("確定重置清單？")) { state.items = []; render(true); } }
-        
+        function clearAll() { if(confirm("重置？")) { state.items = []; render(true); } }
         function showCheckout() {
             const sel = state.items.filter(i => i.picked);
             if(!sel.length) return alert("尚未挑選項目");
