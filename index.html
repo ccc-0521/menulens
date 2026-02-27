@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>MenuLens HK - 終極穩定版</title>
+    <title>MenuLens HK - 智慧精準版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/gun/gun.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.0.3/tesseract.min.js"></script>
     <style>
         :root { --main-bg: #FFFBEB; --accent-orange: #FB923C; --deep-purple: #581C87; --soft-brown: #78350F; }
         body { background-color: white; font-family: system-ui, -apple-system, sans-serif; -webkit-tap-highlight-color: transparent; }
-        .food-card { background-color: var(--main-bg); border: 2px solid var(--accent-orange); transition: all 0.3s; border-radius: 2rem; overflow: hidden; }
+        .food-card { background-color: var(--main-bg); border: 2px solid var(--accent-orange); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); border-radius: 2rem; overflow: hidden; }
         .food-card.unpicked { opacity: 0.5; filter: grayscale(1); transform: scale(0.97); border-color: #E2E8F0; }
         .sticky-footer { position: fixed; bottom: 0; left: 0; right: 0; background: white; box-shadow: 0 -10px 30px rgba(0,0,0,0.1); z-index: 50; border-radius: 2.5rem 2.5rem 0 0; }
         .category-btn.active { background-color: var(--deep-purple); color: white; border-color: var(--deep-purple); }
@@ -18,6 +18,7 @@
         @keyframes glow { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
         #pwd-input { letter-spacing: 1.2rem; text-indent: 1.2rem; }
         ::-webkit-scrollbar { display: none; }
+        .edit-badge { font-size: 8px; background: rgba(0,0,0,0.05); padding: 2px 6px; border-radius: 4px; color: #94a3b8; }
     </style>
 </head>
 <body class="pb-80">
@@ -49,17 +50,17 @@
                 </div>
             </div>
 
-            <div class="flex space-x-2 overflow-x-auto no-scrollbar mb-4">
-                <button onclick="filterCat('all')" class="category-btn active px-6 py-2 rounded-full text-xs font-black border-2 border-slate-100 whitespace-nowrap">全部</button>
-                <button onclick="filterCat('主菜')" class="category-btn px-6 py-2 rounded-full text-xs font-black border-2 border-slate-100 whitespace-nowrap">主菜</button>
-                <button onclick="filterCat('配菜')" class="category-btn px-6 py-2 rounded-full text-xs font-black border-2 border-slate-100 whitespace-nowrap">配菜</button>
-                <button onclick="filterCat('飲料')" class="category-btn px-6 py-2 rounded-full text-xs font-black border-2 border-slate-100 whitespace-nowrap">飲料</button>
+            <div class="flex space-x-2 overflow-x-auto no-scrollbar mb-4" id="cat-nav">
+                <button onclick="filterCat('all')" class="category-btn active px-6 py-2 rounded-full text-xs font-black border-2 border-slate-100 whitespace-nowrap transition-all uppercase">全部</button>
+                <button onclick="filterCat('主菜')" class="category-btn px-6 py-2 rounded-full text-xs font-black border-2 border-slate-100 whitespace-nowrap transition-all">主菜</button>
+                <button onclick="filterCat('配菜')" class="category-btn px-6 py-2 rounded-full text-xs font-black border-2 border-slate-100 whitespace-nowrap transition-all">配菜</button>
+                <button onclick="filterCat('飲料')" class="category-btn px-6 py-2 rounded-full text-xs font-black border-2 border-slate-100 whitespace-nowrap transition-all">飲料</button>
             </div>
 
-            <div class="bg-blue-600 p-4 rounded-[2rem] text-white shadow-lg space-y-3">
-                <div class="flex justify-between items-center text-[10px] font-black uppercase opacity-60">
-                    <span>當地貨幣 (Menu)</span>
-                    <span>家鄉貨幣 (Home)</span>
+            <div class="bg-blue-600 p-4 rounded-[2rem] text-white shadow-lg space-y-2 mb-4">
+                <div class="flex justify-between items-center text-[10px] font-black uppercase opacity-60 px-2">
+                    <span>當地 (Local)</span>
+                    <span>家鄉 (Home)</span>
                 </div>
                 <div class="flex justify-between items-center">
                     <select id="local-ccy" onchange="updateCurrency()" class="bg-blue-700 text-white font-bold p-1 rounded-xl outline-none border-none">
@@ -68,11 +69,10 @@
                         <option value="EUR">🇪🇺 EUR</option>
                         <option value="THB">🇹🇭 THB</option>
                     </select>
-                    <span class="opacity-50">➜</span>
+                    <span class="text-xl opacity-50">➜</span>
                     <select id="home-ccy" onchange="updateCurrency()" class="bg-blue-700 text-white font-bold p-1 rounded-xl outline-none text-right border-none">
                         <option value="HKD">🇭🇰 HKD</option>
                         <option value="TWD">🇹🇼 TWD</option>
-                        <option value="USD">🇺🇸 USD</option>
                     </select>
                 </div>
                 <div class="pt-1 border-t border-blue-500/50 flex justify-between items-center font-mono text-[10px]">
@@ -88,7 +88,7 @@
         <div class="sticky-footer p-8 bg-white">
             <div id="progress-container" class="hidden mb-4">
                 <div class="flex justify-between text-[10px] font-black text-purple-700 mb-1">
-                    <span id="p-status" class="processing-glow uppercase">啟動抗干擾引擎...</span>
+                    <span id="p-status" class="processing-glow uppercase">正在精確分析文字...</span>
                     <span id="p-count">0/0</span>
                 </div>
                 <div class="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
@@ -98,31 +98,31 @@
 
             <div class="flex justify-between items-center mb-6">
                 <div>
-                    <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Bill</span>
+                    <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Selected Total</span>
                     <div class="flex items-baseline space-x-2 leading-none">
                         <span class="text-3xl font-black text-slate-900"><span class="sym-l">¥</span><span id="total-local">0</span></span>
                         <span class="text-sm font-bold text-orange-500">≈ <span class="sym-h">HK$</span><span id="total-home">0</span></span>
                     </div>
                 </div>
-                <button onclick="showCheckout()" class="bg-orange-500 text-white px-10 py-5 rounded-[1.8rem] font-black text-xl shadow-xl active:scale-95 transition-all">CHECKOUT</button>
+                <button onclick="showCheckout()" class="bg-orange-500 text-white px-10 py-5 rounded-[1.8rem] font-black text-xl shadow-xl active:scale-95 transition-all uppercase tracking-tighter">Checkout</button>
             </div>
             
             <div class="flex justify-between items-center px-2 border-t pt-4">
                 <label class="flex items-center space-x-2 text-[11px] font-bold text-slate-400">
                     <input type="checkbox" id="svc-fee" onchange="toggleSvc()" class="accent-orange-500 w-4 h-4">
-                    <span>+10% 服務費</span>
+                    <span>+10% 服務費 (加一)</span>
                 </label>
-                <button onclick="clearAll()" class="text-[11px] font-bold text-red-400 underline uppercase tracking-tighter">Clear All</button>
+                <button onclick="clearAll()" class="text-[11px] font-bold text-red-400 underline uppercase tracking-widest">Clear All</button>
             </div>
         </div>
     </div>
 
     <div id="checkout-modal" class="hidden fixed inset-0 bg-slate-900/95 z-[100] flex items-center justify-center p-6" onclick="closeCheckout()">
-        <div class="bg-white w-full max-w-sm rounded-[3.5rem] p-10 shadow-2xl" onclick="event.stopPropagation()">
-            <h2 class="text-2xl font-black text-slate-800 mb-6 border-b pb-4 font-serif">叫菜明細清單</h2>
+        <div class="bg-white w-full max-w-sm rounded-[3rem] p-10 shadow-2xl" onclick="event.stopPropagation()">
+            <h2 class="text-2xl font-black text-slate-800 mb-6 border-b pb-4">訂單確認彙總</h2>
             <div id="checkout-list" class="space-y-4 mb-6 max-h-[40vh] overflow-y-auto pr-2"></div>
             <div class="text-right border-t pt-6">
-                <p class="text-slate-400 text-[10px] font-bold uppercase mb-1">Final Amount (Incl. Svc)</p>
+                <p class="text-slate-400 text-[10px] font-bold uppercase mb-1">Final Total (Incl. Svc)</p>
                 <p class="text-4xl font-black text-orange-600 italic"><span class="sym-l">¥</span><span id="checkout-total">0</span></p>
             </div>
             <button onclick="closeCheckout()" class="w-full mt-10 bg-slate-900 text-white py-5 rounded-3xl font-black text-lg">返回修改</button>
@@ -134,7 +134,7 @@
         const symMap = { 'JPY':'¥', 'KRW':'₩', 'THB':'฿', 'EUR':'€', 'USD':'$', 'TWD':'NT$', 'HKD':'HK$', 'CNY':'¥' };
         let state = { local: 'JPY', home: 'HKD', rate: 0.051, useSvc: false, items: [], currentCat: 'all' };
 
-        // 🎨 圖片生存處理 (大幅降低解析度以換取 100% 成功率)
+        // 🎨 強化版圖片預處理 (提升對比度)
         function robustPreprocess(file) {
             return new Promise((resolve) => {
                 const reader = new FileReader();
@@ -142,14 +142,15 @@
                     const img = new Image();
                     img.onload = () => {
                         const canvas = document.createElement('canvas');
-                        const maxSide = 800; // 從 1000px 降至 800px，確保手機記憶體不溢出
+                        const maxSide = 800; 
                         let w = img.width, h = img.height;
                         const ratio = Math.min(maxSide/w, maxSide/h);
                         canvas.width = w * ratio; canvas.height = h * ratio;
                         const ctx = canvas.getContext('2d');
-                        ctx.filter = 'grayscale(100%) contrast(1.8) brightness(1.1)';
+                        // 🌟 提升對比度至 2.5，這能解決大部分辨識不準的問題
+                        ctx.filter = 'grayscale(100%) contrast(2.5) brightness(1.1)';
                         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                        resolve(canvas.toDataURL('image/jpeg', 0.6));
+                        resolve(canvas.toDataURL('image/jpeg', 0.8));
                     };
                     img.src = e.target.result;
                 };
@@ -172,7 +173,6 @@
                     const imgBase64 = await robustPreprocess(files[i]);
                     pStatus.innerText = `辨識中 (${i+1}/${files.length})...`;
 
-                    // 關鍵修復：手動指定載入路徑，確保不被網絡策略攔截
                     const { data: { lines } } = await Tesseract.recognize(imgBase64, 'jpn+eng', {
                         workerPath: 'https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.0.3/worker.min.js',
                         corePath: 'https://cdnjs.cloudflare.com/ajax/libs/tesseract.js-core/5.0.0/tesseract-core.wasm.js',
@@ -187,8 +187,7 @@
                             if (price > 10 && raw.length > 1) {
                                 const trans = await translate(raw);
                                 state.items.push({ 
-                                    id: Date.now() + Math.random(), 
-                                    name: trans, raw: raw, price, qty: 1, picked: false,
+                                    id: Date.now() + Math.random(), name: trans, raw: raw, price, qty: 1, picked: false,
                                     category: raw.includes('飲') ? '飲料' : '主菜',
                                     tags: raw.includes('Rare') ? ['RARE DOG!'] : (raw.includes('Allergen') ? ['Allergen'] : [])
                                 });
@@ -198,16 +197,38 @@
                     render(true);
                 }
             } catch (err) {
-                alert("辨識引擎連線失敗。請嘗試更換 Wi-Fi 或刷新頁面重試。");
+                alert("辨識故障。請嘗試刷新。");
             }
             pContainer.classList.add('hidden');
             input.value = "";
         }
 
+        // 🌟 核心：智慧翻譯修正邏輯
+        async function editRawText(id, currentRaw) {
+            event.stopPropagation();
+            const newRaw = prompt("修正原文內容（改對原文能提升翻譯精準度）：", currentRaw);
+            if (newRaw && newRaw !== currentRaw) {
+                const item = state.items.find(x => x.id === id);
+                item.raw = newRaw;
+                // 自動重新觸發翻譯
+                const newTrans = await translate(newRaw);
+                item.name = newTrans;
+                render(true);
+            }
+        }
+
+        async function translate(text) {
+            try {
+                const res = await fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=zh-TW&dt=t&q=${encodeURI(text)}`);
+                const data = await res.json();
+                return data[0][0][0];
+            } catch (e) { return text; }
+        }
+
         function unlockApp() {
             const pwd = document.getElementById('pwd-input').value;
             if (!pwd) return;
-            const roomId = 'room-stable-v2026-ultimate-' + btoa(pwd).substring(0, 10);
+            const roomId = 'room-hk-final-v2026-pro-' + btoa(pwd).substring(0, 10);
             gun = Gun(['https://gun-manhattan.herokuapp.com/gun']);
             room = gun.get(roomId);
             room.on(d => { if(d && d.c) { state = JSON.parse(d.c); render(false); } });
@@ -232,14 +253,6 @@
             render(true);
         }
 
-        async function translate(text) {
-            try {
-                const res = await fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=zh-TW&dt=t&q=${encodeURI(text)}`);
-                const data = await res.json();
-                return data[0][0][0];
-            } catch (e) { return text; }
-        }
-
         function render(isLocal = true) {
             document.getElementById('rate-display').value = state.rate;
             document.querySelectorAll('.cur-l-code').forEach(el => el.innerText = state.local);
@@ -251,16 +264,18 @@
             
             list.innerHTML = filtered.length === 0 ? `<div class="text-center py-20 text-slate-300 font-bold italic">清單空白，請拍照加入</div>` : 
                 filtered.map(item => `
-                <div class="food-card p-6 relative mb-4 ${item.picked ? 'shadow-xl' : 'unpicked'}" onclick="toggle(${item.id})">
+                <div class="food-card p-6 relative mb-4 ${item.picked ? 'shadow-xl' : 'unpicked opacity-50 grayscale'}" onclick="toggle(${item.id})">
                     <div class="flex justify-between items-start">
                         <div class="flex-1 pr-6">
                             <div class="flex flex-wrap gap-1 mb-2">
                                 ${item.tags.map(tag => `<span class="bg-purple-900 text-[8px] text-white px-2 py-0.5 rounded-full font-black uppercase">${tag}</span>`).join('')}
                             </div>
                             <h3 class="text-xl font-black text-slate-800 leading-tight mb-1" onclick="editName(${item.id}, '${item.name}')">${item.name}</h3>
-                            <p class="text-[10px] text-slate-400 font-bold mb-3 uppercase tracking-tighter">原文：${item.raw}</p>
-                            <div class="flex items-baseline space-x-2 leading-none mt-4">
-                                <span class="text-2xl font-black text-slate-900">${symMap[state.local]}${item.price.toLocaleString()}</span>
+                            <p class="text-[10px] text-slate-400 font-bold mb-3 uppercase tracking-tighter" onclick="editRawText(${item.id}, '${item.raw}')">
+                                原文：${item.raw} <span class="edit-badge">修正原文</span>
+                            </p>
+                            <div class="flex items-baseline space-x-2 mt-4 leading-none">
+                                <span class="text-2xl font-black text-slate-900 italic">${symMap[state.local]}${item.price.toLocaleString()}</span>
                                 <span class="text-[10px] font-black text-orange-600 uppercase">≈ ${symMap[state.home]}${Math.round(item.price * state.rate)}</span>
                             </div>
                         </div>
@@ -281,7 +296,7 @@
 
         function toggle(id) { const i = state.items.find(x => x.id === id); i.picked = !i.picked; render(true); }
         function updQty(id, d) { event.stopPropagation(); const i = state.items.find(x => x.id === id); i.qty = Math.max(1, i.qty + d); render(true); }
-        function editName(id, current) { event.stopPropagation(); const n = prompt("修正名稱：", current); if(n) { state.items.find(x=>x.id===id).name = n; render(true); } }
+        function editName(id, current) { event.stopPropagation(); const n = prompt("修正中文名稱：", current); if(n) { state.items.find(x=>x.id===id).name = n; render(true); } }
         function toggleSvc() { state.useSvc = document.getElementById('svc-fee').checked; render(true); }
         function manualRate(v) { state.rate = parseFloat(v); render(true); }
         function filterCat(cat) { state.currentCat = cat; render(false); }
