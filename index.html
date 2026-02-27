@@ -1,26 +1,21 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>MenuLens HK 終極版</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        :root { --main-bg: #FFFBEB; --accent-orange: #FB923C; }
-        body { background-color: #F8FAFC; font-family: system-ui, -apple-system, sans-serif; -webkit-tap-highlight-color: transparent; }
-        .food-card { background-color: var(--main-bg); border: 2px solid var(--accent-orange); border-radius: 1.5rem; transition: all 0.2s; }
-        .unpicked { opacity: 0.5; filter: grayscale(1); border-color: #CBD5E1; }
-        .sticky-footer { 
-            position: fixed; bottom: 0; left: 0; right: 0; 
-            background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); 
-            box-shadow: 0 -10px 20px rgba(0,0,0,0.05); z-index: 50; 
-            padding: 1.5rem 1.5rem 2.5rem 1.5rem; border-radius: 2rem 2rem 0 0; 
-        }
-        .processing-glow { animation: glow 1.2s infinite; }
-        @keyframes glow { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
-        ::-webkit-scrollbar { display: none; }
-    </style>
-</head>
+<header class="p-5 sticky top-0 bg-white/90 backdrop-blur-md z-40 border-b">
+        <div class="flex justify-between items-center mb-4">
+            <h1 class="text-2xl font-black italic text-slate-800">Menu<span class="text-orange-500">Lens</span></h1>
+            <button onclick="location.reload()" class="text-xs font-bold text-slate-400">重置</button>
+        </div>
+        
+        <div class="w-full">
+            <label for="img-upload" 
+                   style="display: block; width: 100%; text-align: center; background-color: #FB923C; color: white; padding: 16px; border-radius: 16px; font-weight: 900; font-size: 18px; box-shadow: 0 4px 12px rgba(251, 146, 60, 0.3); cursor: pointer;">
+                📸 拍攝或上傳菜單
+            </label>
+            <input type="file" id="img-upload" accept="image/*" capture="environment" onchange="processWithWorker(this)" style="display: none;">
+        </div>
+        
+        <p id="rate-info" class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-3">匯率加載中...</p>
+    </header>
 <body class="pb-60">
 
     <header class="p-5 sticky top-0 bg-white/80 backdrop-blur-md z-40 border-b flex justify-between items-center">
