@@ -3,17 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>MenuLens HK - 專業翻譯官</title>
+    <title>MenuLens HK - 終極穩定版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/gun/gun.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.0.3/tesseract.min.js"></script>
     <style>
         :root { --main-bg: #FFFBEB; --accent-orange: #FB923C; --deep-purple: #581C87; --soft-brown: #78350F; }
-        body { background-color: white; font-family: -apple-system, system-ui, sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { background-color: white; font-family: system-ui, -apple-system, sans-serif; -webkit-tap-highlight-color: transparent; }
         .food-card { background-color: var(--main-bg); border: 2px solid var(--accent-orange); transition: all 0.3s; border-radius: 2rem; overflow: hidden; }
         .food-card.unpicked { opacity: 0.5; filter: grayscale(0.8); transform: scale(0.97); }
-        .sticky-footer { position: fixed; bottom: 0; left: 0; right: 0; background: white; box-shadow: 0 -10px 30px rgba(0,0,0,0.1); z-index: 50; border-radius: 2.5rem 2.5rem 0 0; }
-        .category-btn.active { background-color: var(--deep-purple); color: white; }
+        .sticky-footer { position: fixed; bottom: 0; left: 0; right: 0; background: white; box-shadow: 0 -10px 30px rgba(0,0,0,0.1); z-index: 50; border-radius: 2rem 2rem 0 0; }
+        .category-btn.active { background-color: var(--deep-purple); color: white; border-color: var(--deep-purple); }
         .processing-glow { animation: glow 1.5s infinite; color: #7C3AED; }
         @keyframes glow { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
         #pwd-input { letter-spacing: 1.2rem; text-indent: 1.2rem; }
@@ -25,7 +25,7 @@
     <div id="auth-screen" class="fixed inset-0 bg-slate-900 z-[200] flex items-center justify-center p-6 text-white text-center">
         <div class="bg-white p-10 rounded-[3rem] w-full max-w-sm shadow-2xl">
             <div class="text-5xl mb-4">🏮</div>
-            <h2 class="text-2xl font-black text-slate-800 mb-6 uppercase tracking-widest text-center font-serif">MenuLens HK</h2>
+            <h2 class="text-2xl font-black text-slate-800 mb-6 font-serif uppercase tracking-widest">MenuLens HK</h2>
             <input type="password" id="pwd-input" pattern="\d*" inputmode="numeric" placeholder="••••" 
                    class="w-full bg-slate-100 rounded-3xl p-5 text-center font-black text-3xl mb-6 text-slate-800 outline-none border-4 border-transparent focus:border-orange-400">
             <button onclick="unlockApp()" class="w-full bg-orange-500 text-white py-5 rounded-3xl font-black text-xl shadow-xl active:scale-95 transition-all">開啟專業翻譯官</button>
@@ -37,7 +37,7 @@
             <div class="flex justify-between items-center mb-5">
                 <h1 class="text-3xl font-black text-slate-800 italic">Menu<span class="text-orange-500">Lens</span></h1>
                 <div class="flex items-center space-x-3">
-                    <button onclick="logout()" class="text-xs font-bold text-slate-400">登出</button>
+                    <button onclick="logout()" class="text-xs font-bold text-slate-400 underline">登出</button>
                     <label for="camera-direct" class="bg-purple-900 text-white p-3 rounded-2xl cursor-pointer shadow-lg active:scale-90 transition-transform">
                         <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path></svg>
                     </label>
@@ -50,10 +50,10 @@
             </div>
 
             <div class="flex space-x-2 overflow-x-auto no-scrollbar mb-4" id="cat-nav">
-                <button onclick="filterCat('all')" class="category-btn active px-6 py-2 rounded-full text-xs font-black border-2 border-slate-100 whitespace-nowrap transition-all uppercase">全部品項</button>
-                <button onclick="filterCat('刺身')" class="category-btn px-6 py-2 rounded-full text-xs font-black border-2 border-slate-100 whitespace-nowrap transition-all">刺身/冷奴</button>
-                <button onclick="filterCat('主菜')" class="category-btn px-6 py-2 rounded-full text-xs font-black border-2 border-slate-100 whitespace-nowrap transition-all">燒物/主菜</button>
-                <button onclick="filterCat('飲料')" class="category-btn px-6 py-2 rounded-full text-xs font-black border-2 border-slate-100 whitespace-nowrap transition-all">地酒/飲料</button>
+                <button onclick="filterCat('all')" class="category-btn active px-6 py-2 rounded-full text-xs font-black border-2 border-slate-100 whitespace-nowrap">全部品項</button>
+                <button onclick="filterCat('刺身')" class="category-btn px-6 py-2 rounded-full text-xs font-black border-2 border-slate-100 whitespace-nowrap">刺身/冷奴</button>
+                <button onclick="filterCat('主菜')" class="category-btn px-6 py-2 rounded-full text-xs font-black border-2 border-slate-100 whitespace-nowrap">燒物/主食</button>
+                <button onclick="filterCat('飲料')" class="category-btn px-6 py-2 rounded-full text-xs font-black border-2 border-slate-100 whitespace-nowrap">地酒/飲料</button>
             </div>
 
             <div class="bg-blue-600 p-4 rounded-[2rem] text-white shadow-lg space-y-2 mb-4">
@@ -62,7 +62,6 @@
                         <option value="JPY">🇯🇵 JPY</option>
                         <option value="KRW">🇰🇷 KRW</option>
                         <option value="EUR">🇪🇺 EUR</option>
-                        <option value="THB">🇹🇭 THB</option>
                     </select>
                     <span class="opacity-50">➜</span>
                     <select id="home-ccy" onchange="updateCurrency()" class="bg-blue-700 text-white font-bold p-1 rounded-xl outline-none text-right border-none">
@@ -82,7 +81,7 @@
         <div class="sticky-footer p-8 bg-white">
             <div id="progress-container" class="hidden mb-4">
                 <div class="flex justify-between text-[10px] font-black text-purple-700 mb-1 uppercase tracking-tighter">
-                    <span id="p-status" class="processing-glow">專業翻譯官分析中...</span>
+                    <span id="p-status" class="processing-glow font-bold">翻譯官正在分析菜單...</span>
                     <span id="p-count">0/0</span>
                 </div>
                 <div class="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
@@ -102,9 +101,9 @@
             </div>
             
             <div class="flex justify-between items-center px-2 border-t pt-4">
-                <label class="flex items-center space-x-2 text-[11px] font-bold text-slate-400 uppercase">
+                <label class="flex items-center space-x-2 text-[11px] font-bold text-slate-400 uppercase tracking-tighter">
                     <input type="checkbox" id="svc-fee" onchange="toggleSvc()" class="accent-orange-500 w-4 h-4">
-                    <span>+10% 服務費 (加一)</span>
+                    <span>+10% 服務費 (含稅)</span>
                 </label>
                 <button onclick="clearAll()" class="text-[11px] font-bold text-red-400 underline uppercase tracking-widest">Clear All</button>
             </div>
@@ -113,10 +112,10 @@
 
     <div id="checkout-modal" class="hidden fixed inset-0 bg-slate-900/95 z-[100] flex items-center justify-center p-6" onclick="closeCheckout()">
         <div class="bg-white w-full max-w-sm rounded-[3rem] p-10 shadow-2xl" onclick="event.stopPropagation()">
-            <h2 class="text-2xl font-black text-slate-800 mb-6 border-b pb-4 font-serif">叫菜明細清單</h2>
-            <div id="checkout-list" class="space-y-4 mb-6 max-h-[40vh] overflow-y-auto pr-2"></div>
+            <h2 class="text-2xl font-black text-slate-800 mb-6 border-b pb-4 font-serif italic text-center">🏮 點餐確認明細</h2>
+            <div id="checkout-list" class="space-y-4 mb-6 max-h-[45vh] overflow-y-auto pr-2"></div>
             <div class="text-right border-t pt-6">
-                <p class="text-slate-400 text-[10px] font-bold uppercase mb-1">Final Amount (Tax Included)</p>
+                <p class="text-slate-400 text-[10px] font-bold uppercase mb-1">Total Bill (Tax Included)</p>
                 <p class="text-4xl font-black text-orange-600 italic"><span class="sym-l">¥</span><span id="checkout-total">0</span></p>
             </div>
             <button onclick="closeCheckout()" class="w-full mt-10 bg-slate-900 text-white py-5 rounded-3xl font-black text-lg">返回修改</button>
@@ -128,7 +127,7 @@
         const symMap = { 'JPY':'¥', 'KRW':'₩', 'THB':'฿', 'EUR':'€', 'USD':'$', 'TWD':'NT$', 'HKD':'HK$', 'CNY':'¥' };
         let state = { local: 'JPY', home: 'HKD', rate: 0.051, useSvc: false, items: [], currentCat: 'all' };
 
-        // 🎨 穩定預處理：縮小體積以防崩潰
+        // 🎨 圖片生存處理：大幅縮小圖體積以穩定手機載入
         async function robustPreprocess(file) {
             return new Promise((resolve) => {
                 const reader = new FileReader();
@@ -136,14 +135,14 @@
                     const img = new Image();
                     img.onload = () => {
                         const canvas = document.createElement('canvas');
-                        const maxSide = 800; 
+                        const maxSide = 750; // 進一步縮小確保穩定
                         let w = img.width, h = img.height;
                         const ratio = Math.min(maxSide/w, maxSide/h);
                         canvas.width = w * ratio; canvas.height = h * ratio;
                         const ctx = canvas.getContext('2d');
-                        ctx.filter = 'grayscale(100%) contrast(2.2) brightness(1.1)';
+                        ctx.filter = 'grayscale(100%) contrast(2.5) brightness(1.1)';
                         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                        resolve(canvas.toDataURL('image/jpeg', 0.7));
+                        resolve(canvas.toDataURL('image/jpeg', 0.6));
                     };
                     img.src = e.target.result;
                 };
@@ -151,26 +150,21 @@
             });
         }
 
-        // 🏮 角色設定：專業居酒屋翻譯官
-        async function izakayaTranslate(raw) {
+        // 🏮 居酒屋專業翻譯邏輯 (依照視覺邏輯)
+        async function translate官(raw) {
             if(!raw || raw.length < 2) return { name: "未知名稱", cat: "其他", note: "" };
             try {
-                // 模擬專業翻譯官的分類與處理邏輯
                 const res = await fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=ja&tl=zh-TW&dt=t&q=${encodeURI(raw)}`);
                 const data = await res.json();
                 let trans = data[0][0][0];
 
-                // 專業分類邏輯
                 let category = "主菜";
-                if(raw.match(/酒|麦|飲|ビール|サワー|ハイボール/)) category = "飲料";
-                if(raw.match(/刺身|冷|奴|サラダ|枝豆|はやいの/)) category = "刺身";
-                if(raw.match(/串|焼|揚|フライ|天ぷら/)) category = "主菜";
-
-                // 小字特別註解識別
+                if(raw.match(/酒|麦|飲|ビール|サワー/)) category = "飲料";
+                if(raw.match(/刺身|冷|奴|サラダ|枝豆/)) category = "刺身";
+                
                 let note = "";
-                if(raw.match(/限定|季節/)) note = "內容隨季節變動";
-                if(raw.match(/二人/)) note = "兩人份起點";
-                if(raw.match(/アレルゲン|海老|カニ/)) note = "包含過敏原";
+                if(raw.match(/限定|季節/)) note = "隨季節變動";
+                if(raw.match(/二人/)) note = "二人份起點";
 
                 return { name: trans, cat: category, note };
             } catch (e) { return { name: raw, cat: "其他", note: "" }; }
@@ -183,15 +177,15 @@
             const lBar = document.getElementById('loading-bar');
             
             pContainer.classList.remove('hidden');
-            pStatus.innerText = "翻譯官正在準備引擎...";
+            pStatus.innerText = "正在調用穩定引擎...";
 
             try {
                 const files = Array.from(input.files);
                 for (let i = 0; i < files.length; i++) {
                     const imgBase64 = await robustPreprocess(files[i]);
-                    pStatus.innerText = `辨識菜單 (${i+1}/${files.length})...`;
+                    pStatus.innerText = `辨識中 (${i+1}/${files.length})...`;
 
-                    // 強制路徑，解決載入故障
+                    // 強制重設核心路徑，防止「辨識故障」
                     const { data: { lines } } = await Tesseract.recognize(imgBase64, 'jpn+eng', {
                         workerPath: 'https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.0.3/worker.min.js',
                         corePath: 'https://cdnjs.cloudflare.com/ajax/libs/tesseract.js-core/5.0.0/tesseract-core.wasm.js',
@@ -204,16 +198,10 @@
                             const price = parseFloat(m[1].replace(/,/g, ''));
                             const rawName = l.text.replace(m[0],'').replace(/[¥円]/g,'').trim();
                             if (price > 10 && rawName.length > 1) {
-                                const result = await izakayaTranslate(rawName);
+                                const result = await translate官(rawName);
                                 state.items.push({ 
-                                    id: Date.now() + Math.random(), 
-                                    name: result.name, 
-                                    raw: rawName, 
-                                    price, 
-                                    qty: 1, 
-                                    picked: false,
-                                    category: result.cat,
-                                    note: result.note
+                                    id: Date.now() + Math.random(), name: result.name, raw: rawName, price, qty: 1, picked: false,
+                                    category: result.cat, note: result.note
                                 });
                             }
                         }
@@ -221,50 +209,48 @@
                     render(true);
                 }
             } catch (err) {
-                alert("辨識故障。請確保網路連線正常或使用 Wi-Fi 後刷新重試。");
+                alert("辨識故障。請嘗試更換網路或分開上傳。");
             }
             pContainer.classList.add('hidden');
             input.value = "";
         }
 
-        // --- 核心互動模組 ---
         function render(isLocal = true) {
             document.getElementById('rate-display').value = state.rate;
             document.querySelectorAll('.cur-l-code').forEach(el => el.innerText = state.local);
-            document.querySelectorAll('.cur-h-code').forEach(el => el.innerText = state.home);
             document.querySelectorAll('.sym-l').forEach(el => el.innerText = symMap[state.local]);
             document.querySelectorAll('.sym-h').forEach(el => el.innerText = symMap[state.home]);
             const list = document.getElementById('item-list');
             const filtered = state.currentCat === 'all' ? state.items : state.items.filter(i => i.category === state.currentCat);
             
-            list.innerHTML = filtered.length === 0 ? `<div class="text-center py-20 text-slate-300 font-bold italic">🏮 請拍張菜單開始點餐</div>` : 
+            list.innerHTML = filtered.length === 0 ? `<div class="text-center py-20 text-slate-300 font-bold italic">🏮 拍張菜單開始專業翻譯</div>` : 
                 filtered.map(item => `
                 <div class="food-card p-6 relative mb-4 ${item.picked ? 'shadow-xl' : 'unpicked opacity-50 grayscale'}" onclick="toggle(${item.id})">
                     <div class="flex justify-between items-start">
                         <div class="flex-1 pr-6">
                             <div class="flex flex-wrap gap-1 mb-2">
                                 <span class="bg-purple-900 text-[8px] text-white px-2 py-0.5 rounded-full font-black uppercase tracking-widest">${item.category}</span>
-                                ${item.note ? `<span class="bg-red-500 text-[8px] text-white px-2 py-0.5 rounded-full font-black uppercase">💡 ${item.note}</span>` : ''}
+                                ${item.note ? `<span class="bg-red-500 text-[8px] text-white px-2 py-0.5 rounded-full font-black uppercase tracking-widest">⚠️ ${item.note}</span>` : ''}
                             </div>
                             <h3 class="text-xl font-black text-slate-800 leading-tight mb-1" onclick="editName(${item.id}, '${item.name}')">${item.name}</h3>
-                            <p class="text-[10px] text-slate-400 font-bold mb-1 uppercase tracking-tighter" onclick="editRaw(${item.id}, '${item.raw}')">
-                                日文原名：${item.raw} (修正)
+                            <p class="text-[10px] text-slate-400 font-bold mb-3 uppercase tracking-tighter" onclick="editRaw(${item.id}, '${item.raw}')">
+                                日文原名：${item.raw} (點此修正)
                             </p>
                             <div class="flex items-baseline space-x-2 mt-4 leading-none">
                                 <div class="flex flex-col">
-                                    <span class="text-[9px] text-slate-400 font-bold uppercase">Price</span>
+                                    <span class="text-[9px] text-slate-400 font-bold uppercase tracking-widest">Base Price</span>
                                     <span class="text-2xl font-black text-slate-900">${symMap[state.local]}${item.price.toLocaleString()}</span>
                                 </div>
                                 <div class="flex flex-col">
-                                    <span class="text-[9px] text-orange-500 font-bold uppercase">Est. HKD</span>
+                                    <span class="text-[9px] text-orange-500 font-bold uppercase tracking-widest">Est. HKD</span>
                                     <span class="text-sm font-black text-orange-600">≈ ${symMap[state.home]}${Math.round(item.price * state.rate)}</span>
                                 </div>
                             </div>
                         </div>
                         <div class="flex flex-col items-center space-y-4" onclick="event.stopPropagation()">
-                            <button onclick="updQty(${item.id}, 1)" class="w-10 h-10 bg-white border-2 border-orange-100 rounded-2xl flex items-center justify-center text-orange-500 font-black text-xl">+</button>
+                            <button onclick="updQty(${item.id}, 1)" class="w-10 h-10 bg-white border-2 border-orange-100 rounded-2xl flex items-center justify-center text-orange-500 font-black text-xl shadow-sm">+</button>
                             <span class="text-lg font-black text-slate-800">${item.qty}</span>
-                            <button onclick="updQty(${item.id}, -1)" class="w-10 h-10 bg-white border-2 border-orange-100 rounded-2xl flex items-center justify-center text-orange-500 font-black text-xl">-</button>
+                            <button onclick="updQty(${item.id}, -1)" class="w-10 h-10 bg-white border-2 border-orange-100 rounded-2xl flex items-center justify-center text-orange-500 font-black text-xl shadow-sm">-</button>
                         </div>
                     </div>
                 </div>
@@ -279,7 +265,7 @@
         function unlockApp() {
             const pwd = document.getElementById('pwd-input').value;
             if (!pwd) return;
-            const roomId = 'room-stable-v2026-ultimate-izakaya-' + btoa(pwd).substring(0, 10);
+            const roomId = 'room-stable-ultra-v2026-izakaya-' + btoa(pwd).substring(0, 10);
             gun = Gun(['https://gun-manhattan.herokuapp.com/gun']);
             room = gun.get(roomId);
             room.on(d => { if(d && d.c) { state = JSON.parse(d.c); render(false); } });
@@ -287,16 +273,17 @@
             document.getElementById('app-body').classList.remove('hidden');
             sessionStorage.setItem('ml_last_pwd', pwd);
         }
+
         if(sessionStorage.getItem('ml_last_pwd')) { document.getElementById('pwd-input').value = sessionStorage.getItem('ml_last_pwd'); unlockApp(); }
 
         function toggle(id) { const i = state.items.find(x => x.id === id); i.picked = !i.picked; render(true); }
         function updQty(id, d) { event.stopPropagation(); const i = state.items.find(x => x.id === id); i.qty = Math.max(1, i.qty + d); render(true); }
-        function editName(id, current) { event.stopPropagation(); const n = prompt("修正中文名稱：", current); if(n) { state.items.find(x=>x.id===id).name = n; render(true); } }
-        async function editRaw(id, current) { event.stopPropagation(); const n = prompt("修正日文原名：", current); if(n) { const item = state.items.find(x=>x.id===id); item.raw = n; const res = await izakayaTranslate(n); item.name = res.name; item.category = res.cat; item.note = res.note; render(true); } }
+        function editName(id, current) { event.stopPropagation(); const n = prompt("修正中文翻譯：", current); if(n) { state.items.find(x=>x.id===id).name = n; render(true); } }
+        async function editRaw(id, current) { event.stopPropagation(); const n = prompt("修正日文原文：", current); if(n) { const item = state.items.find(x=>x.id===id); item.raw = n; const res = await translate官(n); item.name = res.name; item.category = res.cat; item.note = res.note; render(true); } }
         function toggleSvc() { state.useSvc = document.getElementById('svc-fee').checked; render(true); }
         function manualRate(v) { state.rate = parseFloat(v); render(true); }
         function filterCat(cat) { state.currentCat = cat; render(false); }
-        function clearAll() { if(confirm("重置清單？")) { state.items = []; render(true); } }
+        function clearAll() { if(confirm("確定重置清單？")) { state.items = []; render(true); } }
         function logout() { sessionStorage.removeItem('ml_last_pwd'); location.reload(); }
         function closeCheckout() { document.getElementById('checkout-modal').classList.add('hidden'); }
         function showCheckout() {
